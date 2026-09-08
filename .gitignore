@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.vitepress/cache/
+.vitepress/dist/
+.vitepress/.temp/
+.workspace/
+build.log
+build_final.log
+.deploy_tmp/
+.DS_Store
+.workbuddy/
+刷题/
+题库/
+# 图片不进源码仓库：线上站由构建产物(dist)经 gh-pages 分支承载图片；
+# 如需把源图片一并入库做备份，请改用 Git LFS 并移除本行。
+_images/
+# 散落的爬虫脚本（正式版在 ~/.workbuddy/skills/hxsay-downloader/，无需入库）
+crawl_questions.py
+fetch.py
+fix_images.py
+fix_tables.py
