@@ -45,7 +45,7 @@ let sidebar = generateSidebar({
   documentRootPath: '/',
   scanStartPath: '/',
   useTitleFromFile: true,
-  excludePattern: ['00-目录.md', 'index.md', 'GITEE部署说明.md', '**/node_modules/**', 'node_modules'],
+  excludePattern: ['00-目录.md', 'index.md', '部署说明.md', '**/node_modules/**', 'node_modules'],
 })
 
 const SKIP_GROUP = new Set(['刷题', '题库', 'node_modules', '.workbuddy', '.vitepress', '.git'])
@@ -54,10 +54,16 @@ sidebar = (sidebar || []).filter(
 )
 
 export default defineConfig({
-  // Gitee Pages：个人仓库（仓库名=wzx825）部署在根 -> base '/'
-  // 若仓库名不是 wzx825，构建前设置环境变量 GITEE_PAGES_BASE=/<仓库名>/ 再 build
+  // 静态托管 base（由部署脚本注入）：
+  //   用户页仓库（wzx825 / SfZd714.github.io）-> '/'
+  //   项目页仓库（如 bzygq）                  -> '/bzygq/'
+  // 兼容旧变量名 GITEE_PAGES_BASE / GITHUB_PAGES_BASE
   // 注意：静态托管（Gitee/GitHub Pages）无 URL 重写，必须保留 .html 扩展名，故不开启 cleanUrls
-  base: process.env.GITEE_PAGES_BASE || '/',
+  base:
+    process.env.PAGES_BASE ||
+    process.env.GITHUB_PAGES_BASE ||
+    process.env.GITEE_PAGES_BASE ||
+    '/',
   title: '央国企求职指南手册',
   description: '央国企求职全流程教程归档：网申 / 简历 / 笔试 / 面试 / 体检入职，含行测、AI应用、算法、Java 等',
   lang: 'zh-CN',
@@ -65,7 +71,7 @@ export default defineConfig({
   // 原始文章间互链在子集归档里部分目标页不存在，忽略死链以免阻断构建
   ignoreDeadLinks: true,
   // 刷题 App / 题库 JSON / 索引页 不进入文档构建
-  srcExclude: ['刷题/**', '题库/**', '**/00-目录.md', 'GITEE部署说明.md', 'node_modules/**', '.workbuddy/**'],
+  srcExclude: ['刷题/**', '题库/**', '**/00-目录.md', '部署说明.md', 'node_modules/**', '.workbuddy/**'],
   themeConfig: {
     nav,
     sidebar,
