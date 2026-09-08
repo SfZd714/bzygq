@@ -35,7 +35,7 @@ SQL 四大功能类别的划分形成了一套完整的数据库管理体系：D
 
 整个流程既保障了 SQL 语句执行的准确性和安全性，又通过优化环节提升了数据库的响应效率，是数据库系统能够高效、稳定处理各类数据操作请求的核心逻辑。
 
-## 浣熊真题
+## 真题
 | 【国家电网2017】SQL 语言称为（）A.结构化操纵语言B.结构化定义语言C.结构化控制语言D.结构化查询语言答案：D解析：SQL 的全称是结构化查询语言（Structured Query Language） |
 | --- |
 
@@ -171,7 +171,7 @@ ROLLBACK语句用于撤销事务内所有未提交的操作，当事务中某一
 
 DCL通过权限管理与事务控制两大核心能力，构建了数据库的安全防护与数据一致性保障体系。GRANT与REVOKE实现了权限的精细化管控，从访问源头保障数据安全；BEGIN TRANSACTION、COMMIT、ROLLBACK则确保了复杂业务操作的原子性与完整性，避免数据异常。
 
-## 浣熊真题
+## 真题
 | 【国家电网2017】SQL 语言中，删除一个表的命令是（）A.DELETE；B.DROP；C.CLEAR；D.REMOVE答案：B解析：DROP TABLE用于删除表，DELETE用于删除表中数据 |
 | --- |
 
@@ -349,7 +349,7 @@ SQL 中的 INSERT 语句是向数据库表添加新数据行的核心命令，�
 | SQL-- 根据价格区间分类SELECTname,price,CASEWHEN price > 1000 THEN '高价'WHEN price > 500 THEN '中价'ELSE '低价'END AS 价格等级FROM products; |
 | --- |
 
-## 浣熊真题
+## 真题
 | 【中国银行2022】MYSQL 中 DEPT 表 DEPTNO 为 20、30、40，NEWDEPT 表 DEPTNO 为 10、50、null，查询 DEPT 中有而 NEWDEPT 中没有的数据，原 SQL（select * from DEPT where DEPTNO not in(SELECT DEPTNO from NEWDEPT)）查不到结果，改写正确的是（）A.select * from DEPT where not (DEPTNO=10 or DEPTNO=50 or DEPTNO=null)；B.select * from DEPT where DEPTNO not in(10;50,null)；C.select * from DEPT where not exists (SELECT DEPTNO from NEWDEPT)；D.select * from DEPT d where not exists (SELECT null from NEWDEPT e where d.DEPTNO=e.DEPTNO)答案：D解析：not in无法处理null值，not exists通过关联查询避免null影响，准确匹配不存在的部门号。 |
 | --- |
 

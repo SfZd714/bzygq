@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: 央国企求职指南手册
-  text: 浣熊指南本地归档
+  text: 指南本地归档
   tagline: 覆盖网申 / 简历 / 笔试 / 面试 / 体检入职全流程
   actions:
     - theme: brand
