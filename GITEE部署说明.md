@@ -6,9 +6,10 @@
 
 ```bash
 npm install
-npm run docs:dev      # 本地预览，默认 http://localhost:5173
-# 或手机同 Wi-Fi：npm run docs:dev -- --host  然后手机访问 http://<电脑局域网IP>:5173
-npm run build         # 产出 .vitepress/dist 静态文件
+npm run dev          # 本地预览，默认 http://localhost:5173
+# 或手机同 Wi-Fi：npm run dev -- --host  然后手机访问 http://<电脑局域网IP>:5173
+npm run build        # 产出 .vitepress/dist 静态文件
+# 预览已构建产物：npm run preview  （手机访问加 --host）
 ```
 
 > 注意：在 WorkBuddy 终端里构建需先 `export CODEBUDDY_SAFE_DELETE_ENABLED=0`，否则 Vite 清理 dist 时会被 safe-delete 拦截导致构建失败（无该 shim 的环境忽略即可）。
@@ -38,7 +39,7 @@ npm run build         # 产出 .vitepress/dist 静态文件
 
 - 部署后直接用手机浏览器打开 `https://wzx825.gitee.io/`（或带仓库名的地址）。
 - 站点响应式：手机上侧栏收成汉堡菜单，单列排版，支持本地搜索、大纲跳转。
-- 未部署时，电脑开 `npm run docs:dev -- --host`，手机同 Wi-Fi 访问局域网地址也能看（零托管）。
+- 未部署时，电脑开 `npm run dev -- --host`，手机同 Wi-Fi 访问局域网地址也能看（零托管）。
 
 ## 四、更新内容后重新发布
 

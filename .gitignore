@@ -3,6 +3,7 @@ dist/
 .vitepress/cache/
 .vitepress/dist/
 .vitepress/.temp/
+.vitepress/config.js.timestamp-*.mjs
 .workspace/
 build.log
 build_final.log
