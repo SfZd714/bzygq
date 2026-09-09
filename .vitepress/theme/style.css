@@ -468,3 +468,141 @@
 .dark .mini-nav-section.theme-java .mini-nav-icon {
   color: #1f2937;
 }
+
+/* ============================================================
+ * 首页专题入口（hero 下方 4 张大卡，可点击跳转）
+ * ============================================================ */
+
+/* —— 包裹：4 列 grid —— */
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1em;
+  margin: 1.2em 0 2em;
+}
+@media (max-width: 1024px) {
+  .topic-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .topic-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7em;
+  }
+}
+
+/* —— 单卡：列内填充 + 圆角 + 悬停 —— */
+.topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  padding: 1.1em 1.2em 1.1em;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--vp-c-text-1);
+  position: relative;
+  min-height: 130px;
+  transition: transform 0.18s ease,
+              box-shadow 0.18s ease,
+              border-color 0.18s ease,
+              background 0.18s ease;
+  overflow: hidden;
+}
+.topic-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--mini-nav-default);
+}
+.theme-docs    .topic-card::before { background: var(--mini-nav-docs); }
+.theme-xingce  .topic-card::before { background: var(--mini-nav-xingce); }
+.theme-struct  .topic-card::before { background: var(--mini-nav-struct); }
+.theme-tech    .topic-card::before { background: var(--mini-nav-tech); }
+
+.topic-card:hover {
+  transform: translateY(-3px);
+  background: var(--vp-c-bg);
+  border-color: var(--mini-nav-default);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--mini-nav-default) 18%, transparent);
+}
+.theme-docs    .topic-card:hover { border-color: var(--mini-nav-docs);   box-shadow: 0 6px 18px color-mix(in srgb, var(--mini-nav-docs) 18%, transparent); }
+.theme-xingce  .topic-card:hover { border-color: var(--mini-nav-xingce); box-shadow: 0 6px 18px color-mix(in srgb, var(--mini-nav-xingce) 18%, transparent); }
+.theme-struct  .topic-card:hover { border-color: var(--mini-nav-struct); box-shadow: 0 6px 18px color-mix(in srgb, var(--mini-nav-struct) 18%, transparent); }
+.theme-tech    .topic-card:hover { border-color: var(--mini-nav-tech);   box-shadow: 0 6px 18px color-mix(in srgb, var(--mini-nav-tech) 18%, transparent); }
+
+/* —— emoji 方块 —— */
+.topic-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  background: color-mix(in srgb, var(--mini-nav-default) 14%, transparent);
+}
+.theme-docs    .topic-emoji { background: color-mix(in srgb, var(--mini-nav-docs) 14%, transparent); }
+.theme-xingce  .topic-emoji { background: color-mix(in srgb, var(--mini-nav-xingce) 14%, transparent); }
+.theme-struct  .topic-emoji { background: color-mix(in srgb, var(--mini-nav-struct) 14%, transparent); }
+.theme-tech    .topic-emoji { background: color-mix(in srgb, var(--mini-nav-tech) 14%, transparent); }
+
+/* —— 标题 —— */
+.topic-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+  letter-spacing: 0.01em;
+}
+
+/* —— 描述 —— */
+.topic-desc {
+  font-size: 0.82rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+/* —— 圆形箭头按钮 —— */
+.topic-arrow {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: color-mix(in srgb, var(--mini-nav-default) 12%, transparent);
+  color: var(--mini-nav-default);
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.theme-docs    .topic-arrow { color: var(--mini-nav-docs);   background: color-mix(in srgb, var(--mini-nav-docs) 12%, transparent); }
+.theme-xingce  .topic-arrow { color: var(--mini-nav-xingce); background: color-mix(in srgb, var(--mini-nav-xingce) 12%, transparent); }
+.theme-struct  .topic-arrow { color: var(--mini-nav-struct); background: color-mix(in srgb, var(--mini-nav-struct) 12%, transparent); }
+.theme-tech    .topic-arrow { color: var(--mini-nav-tech);   background: color-mix(in srgb, var(--mini-nav-tech) 12%, transparent); }
+
+.topic-card:hover .topic-arrow {
+  transform: translateX(3px);
+  background: var(--mini-nav-default);
+  color: white;
+}
+.theme-docs    .topic-card:hover .topic-arrow { background: var(--mini-nav-docs);   color: white; }
+.theme-xingce  .topic-card:hover .topic-arrow { background: var(--mini-nav-xingce); color: white; }
+.theme-struct  .topic-card:hover .topic-arrow { background: var(--mini-nav-struct); color: white; }
+.theme-tech    .topic-card:hover .topic-arrow { background: var(--mini-nav-tech);   color: white; }
+
+/* —— 暗色模式 —— */
+.dark .topic-card {
+  background: var(--vp-c-bg-soft);
+}
+.dark .topic-card:hover {
+  background: var(--vp-c-bg);
+}

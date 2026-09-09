@@ -2,9 +2,9 @@
 
 > 结构化面试 板块的全部文档，共 **6 篇**，按目录结构组织。
 
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">001</span><a class="mini-nav-link" href="./什么是结构化面试？.md">什么是结构化面试？</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">002</span><a class="mini-nav-link" href="./结构化面试——人际关系问题.md">结构化面试——人际关系问题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">003</span><a class="mini-nav-link" href="./结构化面试——应急处置.md">结构化面试——应急处置</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">004</span><a class="mini-nav-link" href="./结构化面试——社会现象问题.md">结构化面试——社会现象问题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">005</span><a class="mini-nav-link" href="./结构化面试——观点态度题.md">结构化面试——观点态度题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">006</span><a class="mini-nav-link" href="./结构化面试——计划组织问题.md">结构化面试——计划组织问题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">001</span><a class="mini-nav-link" href="./%E4%BB%80%E4%B9%88%E6%98%AF%E7%BB%93%E6%9E%84%E5%8C%96%E9%9D%A2%E8%AF%95%EF%BC%9F.html">什么是结构化面试？</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">002</span><a class="mini-nav-link" href="./%E7%BB%93%E6%9E%84%E5%8C%96%E9%9D%A2%E8%AF%95%E2%80%94%E2%80%94%E4%BA%BA%E9%99%85%E5%85%B3%E7%B3%BB%E9%97%AE%E9%A2%98.html">结构化面试——人际关系问题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">003</span><a class="mini-nav-link" href="./%E7%BB%93%E6%9E%84%E5%8C%96%E9%9D%A2%E8%AF%95%E2%80%94%E2%80%94%E5%BA%94%E6%80%A5%E5%A4%84%E7%BD%AE.html">结构化面试——应急处置</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">004</span><a class="mini-nav-link" href="./%E7%BB%93%E6%9E%84%E5%8C%96%E9%9D%A2%E8%AF%95%E2%80%94%E2%80%94%E7%A4%BE%E4%BC%9A%E7%8E%B0%E8%B1%A1%E9%97%AE%E9%A2%98.html">结构化面试——社会现象问题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">005</span><a class="mini-nav-link" href="./%E7%BB%93%E6%9E%84%E5%8C%96%E9%9D%A2%E8%AF%95%E2%80%94%E2%80%94%E8%A7%82%E7%82%B9%E6%80%81%E5%BA%A6%E9%A2%98.html">结构化面试——观点态度题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">006</span><a class="mini-nav-link" href="./%E7%BB%93%E6%9E%84%E5%8C%96%E9%9D%A2%E8%AF%95%E2%80%94%E2%80%94%E8%AE%A1%E5%88%92%E7%BB%84%E7%BB%87%E9%97%AE%E9%A2%98.html">结构化面试——计划组织问题</a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>

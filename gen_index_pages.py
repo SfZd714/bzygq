@@ -2,7 +2,12 @@
 """为每个板块目录生成 index.md 索引页，使 /板块名/ 这一类目录链接可访问。
 
 VitePress 只在存在 index.md 时才会生成目录首页，否则点击板块链接会 404。
-链接使用相对 .md 路径，由 VitePress 在构建时自动转写为正确的 .html URL。
+
+⚠️ 重要（曾踩坑）：索引页里的导航行是 **raw HTML**，VitePress **不会**
+把其中的 .md 链接转写成 .html —— 早期版本误以为会自动转写，生成了
+`./xxx.md`，结果 dist 里只有 .html，全站索引页链接 100% 404。
+必须直接生成 `./xxx.html`（且 cleanUrls=false，不能省略后缀），
+并对空格/中文做 URL 编码。
 
 每个子文档展示为"迷你导航行"：左侧 001 编号徽标 + 中间标题 + 右侧圆形箭头。
 大类（板块）用低饱和度强调色，配套颜色应用到色条、图标底、数量标签、编号徽标、
@@ -10,6 +15,7 @@ VitePress 只在存在 index.md 时才会生成目录首页，否则点击板块
 """
 import os
 import re
+import urllib.parse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SKIP = {'.vitepress', 'node_modules', '.workbuddy', '.git', '刷题', '题库'}
@@ -98,9 +104,12 @@ def list_entries(dir_path):
     return natural_sort(dirs), natural_sort(files)
 
 
-def build_lines(dir_path, theme):
+def build_lines(dir_path, theme, rel_prefix=''):
     """生成该目录的索引内容（用 HTML 卡片形式）。
     子文档渲染为 .mini-nav-row；子目录渲染为 ### 📘 <目录名>，再递归其内容。
+
+    rel_prefix：当前目录相对于**板块索引页**的路径前缀（如 "逻辑推理/1.图形推理/"）。
+    递归时必须累加，否则子目录里的文档会生成成平级链接而 404。
 
     注意：分类配色类（theme-xxx）直接挂在每行 row 上，而不是外层包裹 div——
     因为 raw HTML 块与 Markdown 的 `###` 标题混排会让 Vue 编译器误判标签闭合。
@@ -109,7 +118,10 @@ def build_lines(dir_path, theme):
     dirs, files = list_entries(dir_path)
     # 先文件
     for i, name in enumerate(files, 1):
-        link = './' + name.replace(' ', '%20')
+        # 直接指向构建产物 .html（cleanUrls=false，不能省后缀）
+        # 路径需带上 rel_prefix，并对空格/中文逐段编码
+        rel = rel_prefix + name[:-3] + '.html'
+        link = './' + '/'.join(urllib.parse.quote(seg) for seg in rel.split('/'))
         title = name[:-3]  # 去 .md
         # 标题中的 &、<、>、" 需要 HTML 转义
         safe_title = (title.replace('&', '&amp;')
@@ -127,7 +139,7 @@ def build_lines(dir_path, theme):
     # 后子目录（递归）
     for name in dirs:
         sub = os.path.join(dir_path, name)
-        sub_html = build_lines(sub, theme)
+        sub_html = build_lines(sub, theme, rel_prefix + name + '/')
         if sub_html:
             lines.append('')
             lines.append('### 📘 %s' % name)

@@ -21,6 +21,7 @@ import os
 import re
 import sys
 import html as htmlmod
+import posixpath
 import urllib.parse
 from collections import defaultdict
 
@@ -42,11 +43,31 @@ def collect_existing(dist):
 
 
 def scan(dist, existing, base):
-    """扫描所有 html 的内部链接，返回 {坏链接: [出现在哪些页面]}。"""
+    """扫描所有 html 的内部链接，返回 {坏链接: [出现在哪些页面]}。
+
+    同时支持两类内部链接：
+      1) 绝对链接：href="/bzygq/docs/..."   （VitePress 渲染 frontmatter / markdown 链接时生成）
+      2) 相对链接：href="./docs/" 或 "../docs/"（raw HTML 里手写时必须用相对形式，
+         否则部署到子路径会缺 base 前缀直接 404 —— 首页 13 张导航卡曾全部踩这个坑）
+    """
     bad = defaultdict(list)
     checked = 0
     html_files = sorted(f for f in existing if f.endswith('.html'))
-    pattern = re.compile(r'href="(' + re.escape(base) + r'[^"#?]+)"')
+    # 绝对链接（带 base 前缀）
+    abs_pattern = re.compile(r'href="(' + re.escape(base) + r'[^"#?]+)"')
+    # 相对链接（./ 或 ../ 开头，排除外链与协议相对）
+    rel_pattern = re.compile(r'href="(\.{1,2}/[^"#?]+)"')
+
+    def resolve(target):
+        """target 为去掉前缀后的路径，返回候选落点列表。"""
+        target = '/' + target.lstrip('/')
+        cand = [target]
+        if target.endswith('/'):
+            cand.append(target + 'index.html')
+        elif not target.endswith('.html'):
+            cand.append(target + '.html')
+            cand.append(target + '/index.html')
+        return cand
 
     for rel in html_files:
         try:
@@ -55,24 +76,28 @@ def scan(dist, existing, base):
         except OSError:
             continue
 
-        for m in pattern.finditer(doc):
+        # 当前页面所在目录（用于解析相对链接）
+        page_dir = os.path.dirname(rel)
+
+        for m in abs_pattern.finditer(doc):
             href = m.group(1)
-            # 静态资源与外链跳过
             if href.startswith(base + 'assets/'):
                 continue
             # 关键：先还原 HTML 实体（&amp; -> &），再 URL 解码
             target = htmlmod.unescape(urllib.parse.unquote(href[len(base):]))
-            target = '/' + target
-            # 目录链接 / 无后缀链接 的多种可能落点
-            cand = [target]
-            if target.endswith('/'):
-                cand.append(target + 'index.html')
-            elif not target.endswith('.html'):
-                cand.append(target + '.html')
-                cand.append(target + '/index.html')
-
             checked += 1
-            if not any(c in existing for c in cand):
+            if not any(c in existing for c in resolve(target)):
+                bad[href].append(rel)
+
+        for m in rel_pattern.finditer(doc):
+            href = m.group(1)
+            if 'assets/' in href:
+                continue
+            target = htmlmod.unescape(urllib.parse.unquote(href))
+            # 相对 -> 绝对：基于页面目录做 posix 归一化
+            target = posixpath.normpath(posixpath.join(page_dir, target))
+            checked += 1
+            if not any(c in existing for c in resolve(target)):
                 bad[href].append(rel)
 
     return bad, checked, len(html_files)

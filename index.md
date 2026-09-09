@@ -24,24 +24,36 @@ features:
     details: 每页底部「在 GitHub 上编辑此页」，点点就能提议修改或纠错。
 ---
 
+## 🎯 专题入口
+
+<div class="topic-grid">
+
+<a class="topic-card theme-docs" href="./docs/"><span class="topic-emoji">🚀</span><span class="topic-name">求职主线 docs</span><span class="topic-desc">网申 / 简历优化 / 笔试指南 / 面试指南 / 体检入职 全流程</span><span class="topic-arrow" aria-hidden="true">→</span></a>
+
+<a class="topic-card theme-xingce" href="./行测/"><span class="topic-emoji">📊</span><span class="topic-name">行测笔试</span><span class="topic-desc">行测、算法笔试（LeetCode）、Java 面试问题汇总</span><span class="topic-arrow" aria-hidden="true">→</span></a>
+
+<a class="topic-card theme-struct" href="./结构化面试/"><span class="topic-emoji">🎤</span><span class="topic-name">面试专项</span><span class="topic-desc">结构化 / 半结构化 / 无领导小组 三类面试逐题讲解</span><span class="topic-arrow" aria-hidden="true">→</span></a>
+
+<a class="topic-card theme-tech" href="./科技岗专业课/"><span class="topic-emoji">💻</span><span class="topic-name">技术扩展</span><span class="topic-desc">科技岗专业课、AI 应用开发</span><span class="topic-arrow" aria-hidden="true">→</span></a>
+
+</div>
+
 ## 📚 板块导航
 
-<div class="mini-nav-row theme-docs"><span class="mini-nav-badge">001</span><a class="mini-nav-link" href="/docs/"><div class="mini-nav-text"><span class="mini-nav-name">📋 求职主线 docs</span><span class="mini-nav-desc">网申 / 简历 / 笔试指南 / 面试指南 / 体检入职 全流程</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-docs"><span class="mini-nav-badge">001</span><a class="mini-nav-link" href="./docs/"><div class="mini-nav-text"><span class="mini-nav-name">📋 求职主线 docs</span><span class="mini-nav-desc">网申 / 简历 / 笔试指南 / 面试指南 / 体检入职 全流程</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">002</span><a class="mini-nav-link" href="/结构化面试/"><div class="mini-nav-text"><span class="mini-nav-name">🎤 结构化面试</span><span class="mini-nav-desc">人际关系 / 应急处置 / 社会现象 / 观点态度 / 计划组织</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-struct"><span class="mini-nav-badge">002</span><a class="mini-nav-link" href="./结构化面试/"><div class="mini-nav-text"><span class="mini-nav-name">🎤 结构化面试</span><span class="mini-nav-desc">人际关系 / 应急处置 / 社会现象 / 观点态度 / 计划组织</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-semi"><span class="mini-nav-badge">003</span><a class="mini-nav-link" href="/半结构化面试/"><div class="mini-nav-text"><span class="mini-nav-name">💬 半结构化面试</span><span class="mini-nav-desc">个人经历 / 个性特征 / 应急应变 / 求职意愿 / 沟通协调</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-semi"><span class="mini-nav-badge">003</span><a class="mini-nav-link" href="./半结构化面试/"><div class="mini-nav-text"><span class="mini-nav-name">💬 半结构化面试</span><span class="mini-nav-desc">个人经历 / 个性特征 / 应急应变 / 求职意愿 / 沟通协调</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-group"><span class="mini-nav-badge">004</span><a class="mini-nav-link" href="/无领导小组面试/"><div class="mini-nav-text"><span class="mini-nav-name">👥 无领导小组面试</span><span class="mini-nav-desc">开放性问题 / 选择排序型 / 无领导辩论 / 群面方法论</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-group"><span class="mini-nav-badge">004</span><a class="mini-nav-link" href="./无领导小组面试/"><div class="mini-nav-text"><span class="mini-nav-name">👥 无领导小组面试</span><span class="mini-nav-desc">开放性问题 / 选择排序型 / 无领导辩论 / 群面方法论</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-xingce"><span class="mini-nav-badge">005</span><a class="mini-nav-link" href="/行测/"><div class="mini-nav-text"><span class="mini-nav-name">📊 行测</span><span class="mini-nav-desc">常识 / 言语理解 / 数量分析 / 资料分析 / 逻辑推理</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-xingce"><span class="mini-nav-badge">005</span><a class="mini-nav-link" href="./行测/"><div class="mini-nav-text"><span class="mini-nav-name">📊 行测</span><span class="mini-nav-desc">常识 / 言语理解 / 数量分析 / 资料分析 / 逻辑推理</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-ai"><span class="mini-nav-badge">006</span><a class="mini-nav-link" href="/AI应用开发/"><div class="mini-nav-text"><span class="mini-nav-name">🤖 AI 应用开发</span><span class="mini-nav-desc">深度学习 / LLM / RAG / Agent / Cursor 实战</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-ai"><span class="mini-nav-badge">006</span><a class="mini-nav-link" href="./AI应用开发/"><div class="mini-nav-text"><span class="mini-nav-name">🤖 AI 应用开发</span><span class="mini-nav-desc">深度学习 / LLM / RAG / Agent / Cursor 实战</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-tech"><span class="mini-nav-badge">007</span><a class="mini-nav-link" href="/科技岗专业课/"><div class="mini-nav-text"><span class="mini-nav-name">📡 科技岗专业课</span><span class="mini-nav-desc">操作系统 / 数据库 / 数据结构 / 计网 / 计组 / 软件工程</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-tech"><span class="mini-nav-badge">007</span><a class="mini-nav-link" href="./科技岗专业课/"><div class="mini-nav-text"><span class="mini-nav-name">📡 科技岗专业课</span><span class="mini-nav-desc">操作系统 / 数据库 / 数据结构 / 计网 / 计组 / 软件工程</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-algo"><span class="mini-nav-badge">008</span><a class="mini-nav-link" href="/算法笔试LeetCode/"><div class="mini-nav-text"><span class="mini-nav-name">💻 算法笔试（LeetCode）</span><span class="mini-nav-desc">数组 / 链表 / 栈队列 / 二叉树 / 动态规划 / 回溯</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
+<div class="mini-nav-row theme-algo"><span class="mini-nav-badge">008</span><a class="mini-nav-link" href="./算法笔试LeetCode/"><div class="mini-nav-text"><span class="mini-nav-name">💻 算法笔试（LeetCode）</span><span class="mini-nav-desc">数组 / 链表 / 栈队列 / 二叉树 / 动态规划 / 回溯</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
 
-<div class="mini-nav-row theme-java"><span class="mini-nav-badge">009</span><a class="mini-nav-link" href="/Java面试问题汇总/"><div class="mini-nav-text"><span class="mini-nav-name">☕ Java 面试问题汇总</span><span class="mini-nav-desc">Java基础 / JVM / Kafka / MySQL / Redis / Spring 全家桶</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
-
-> 本站为本地 Markdown 归档构建的静态文档站，支持全文搜索与手机阅读（侧栏自动折叠为汉堡菜单）。
+<div class="mini-nav-row theme-java"><span class="mini-nav-badge">009</span><a class="mini-nav-link" href="./Java面试问题汇总/"><div class="mini-nav-text"><span class="mini-nav-name">☕ Java 面试问题汇总</span><span class="mini-nav-desc">Java基础 / JVM / Kafka / MySQL / Redis / Spring 全家桶</span></div></a><span class="mini-nav-arrow" aria-hidden="true">→</span></div>
