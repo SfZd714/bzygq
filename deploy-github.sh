@@ -68,6 +68,17 @@ fi
 echo "=== 构建中 ==="
 npm run build
 
+# 2.5) 部署前自检：扫描内部死链，发现则阻止推送
+echo "=== 死链扫描 ==="
+if [ -f "$(dirname "$0")/check_dead_links.py" ]; then
+  python "$(dirname "$0")/check_dead_links.py" || {
+    echo "❌ 检测到内部死链，已阻止部署。请修复后重试。"
+    exit 1
+  }
+else
+  echo "  (未找到 check_dead_links.py，跳过自检)"
+fi
+
 # .nojekyll：禁用 GitHub 的 Jekyll 处理（否则下划线目录/文件会被忽略）
 touch .vitepress/dist/.nojekyll
 
