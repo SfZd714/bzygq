@@ -30,14 +30,31 @@ function firstMd(dir) {
   return found
 }
 
+// 板块名 -> emoji（顶部 nav 与侧栏分组共用）
+const SECTION_ICON = {
+  'docs': '📋',
+  '行测': '📊',
+  'AI应用开发': '🤖',
+  '算法笔试LeetCode': '💻',
+  'Java面试问题汇总': '☕',
+  '结构化面试': '🎤',
+  '半结构化面试': '💬',
+  '无领导小组面试': '👥',
+  '科技岗专业课': '📡',
+  '刷题': '📝',
+  '题库': '📚',
+  '部署说明': '🚀',
+}
+const iconOf = (name) => SECTION_ICON[name] || '📘'
+
 const topDirs = fs.readdirSync(root, { withFileTypes: true })
   .filter((d) => d.isDirectory() && !SKIP.has(d.name))
   .map((d) => d.name)
 
-const nav = [{ text: '首页', link: '/' }]
+const nav = [{ text: '🏠 首页', link: '/' }]
 for (const name of topDirs) {
   const link = firstMd(path.join(root, name))
-  if (link) nav.push({ text: name, link: '/' + link })
+  if (link) nav.push({ text: iconOf(name) + ' ' + name, link: '/' + link })
 }
 
 // 自动侧栏（按目录树）；随后过滤掉空分组和非文档目录
@@ -52,6 +69,34 @@ const SKIP_GROUP = new Set(['刷题', '题库', 'node_modules', '.workbuddy', '.
 sidebar = (sidebar || []).filter(
   (g) => g && Array.isArray(g.items) && g.items.length > 0 && !SKIP_GROUP.has(g.text)
 )
+
+// 自然排序：把"一/二/三"和"1./2./10."等前缀统一成整数比较，避免 Unicode 字典序把
+// "深度学习"排在"RAG"之前、或把"1.x"排在"10.x"之后。
+const CN_NUM = { '零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'百':100,'千':1000 }
+function leadKey(s) {
+  s = String(s).replace(/^[\s\u3000.\-_、:：>＞#]+/, '').trim()
+  const m = s.match(/^(\d+)/)
+  if (m) return [parseInt(m[1], 10), m[0].length]
+  if (s && s[0] in CN_NUM) return [CN_NUM[s[0]], 1]
+  return [Infinity, 0]
+}
+function naturalCompare(a, b) {
+  const [na, la] = leadKey(a)
+  const [nb, lb] = leadKey(b)
+  if (na !== nb) return na - nb
+  return la - lb
+}
+function sortSidebar(items) {
+  if (!Array.isArray(items)) return
+  items.sort((a, b) => naturalCompare(a.text || '', b.text || ''))
+  for (const it of items) if (it.items) sortSidebar(it.items)
+}
+sortSidebar(sidebar)
+
+// 给侧栏顶层分组加 emoji
+for (const g of sidebar) {
+  if (g && typeof g.text === 'string') g.text = iconOf(g.text) + ' ' + g.text
+}
 
 export default defineConfig({
   // 静态托管 base（由部署脚本注入）：

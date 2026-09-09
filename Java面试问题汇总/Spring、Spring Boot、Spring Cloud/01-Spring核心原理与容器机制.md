@@ -1,0 +1,576 @@
+# Spring 核心原理与容器机制
+
+Spring Framework 是以 IoC 容器和 AOP 增强机制为核心的 Java 企业级应用基础框架。面试里问 Spring，通常不是考“会不会用 @Service、@Autowired、@Transactional”，而是考你能不能把对象如何进入容器、依赖如何完成装配、Bean 如何经历生命周期、代理对象如何生成、事务为什么会失效、循环依赖为什么有些能解有些不能解这些链路讲清楚。
+
+复习 Spring 不能只背“降低耦合、非侵入、轻量级”。这类说法只能回答第一层定义，面试官一追问“具体怎么降低耦合”“为什么事务会失效”“BeanPostProcessor 在哪里起作用”“AOP 代理对象什么时候创建”，就会暴露理解空洞。更适合面试的回答方式是：Spring 通过容器接管对象创建和依赖关系，通过 BeanDefinition 统一描述 Bean 的元信息，通过各种后置处理器开放扩展点，通过 AOP 代理把事务、日志、权限等横切逻辑织入方法调用，并通过统一的数据访问、事务、Web、测试与第三方集成能力降低工程样板代码。
+
+![images/01-spring-knowledge-map.png](../_images/fac82daac97e465c955c063393aeb9fa.png)
+
+images/01-spring-knowledge-map.png
+
+这张知识图可以作为复习总入口。Spring 的主线不是散乱的注解，而是两条链路：第一条是 IoC 容器链路，围绕 BeanDefinition、BeanFactory、ApplicationContext、BeanFactoryPostProcessor、BeanPostProcessor 和 Bean 生命周期展开；第二条是代理增强链路，围绕 AOP、事务、调用链、代理失效和异常回滚规则展开。所有高频题最终都可以回到“对象是否被容器管理”和“调用是否经过代理”这两个判断。
+
+## 一、Spring 核心价值
+
+### 1\. 降低耦合的具体含义
+
+“Spring 降低耦合”这个说法本身没错，但太浅。面试官真正想听的是：耦合发生在哪里，Spring 用什么机制拆掉这些耦合，拆掉以后给项目带来什么工程价值。
+
+传统 Java 代码里，一个业务类如果直接 new 依赖对象，就会把三件事混在一起：业务规则、依赖对象的创建方式、依赖实现的选择逻辑。比如订单服务直接 new JdbcOrderRepository()，这个服务不仅知道“我要保存订单”，还知道“保存订单要用 JDBC 实现”。一旦后续改成 MyBatis、远程 RPC 或缓存代理，业务类就要跟着改。更麻烦的是，单元测试时也很难替换成 mock 实现。
+
+Spring 的做法是把对象创建权和依赖装配权交给容器。业务类只声明自己需要 OrderRepository，容器负责根据配置、注解、条件装配和候选 Bean 选择规则把具体实现注入进来。这样降低的不是“类之间完全没有关系”，而是“业务类对具体创建过程和具体实现类的依赖”。这一点在面试里要说准：Spring 不是让对象之间不协作，而是让对象协作关系由容器统一管理。
+
+更完整的回答可以分成四层：
+| 价值层次 | 面试表达 | 背后的机制 |
+| --- | --- | --- |
+| 对象管理 | Spring 统一创建、装配、初始化和销毁 Bean | IoC 容器、BeanDefinition、BeanFactory |
+| 扩展增强 | 业务代码只写业务逻辑，事务、日志、权限等由框架织入 | AOP、Advisor、Interceptor、代理对象 |
+| 工程集成 | 数据访问、事务、Web、消息、缓存等有统一抽象 | JdbcTemplate、TransactionManager、MVC、Cache |
+| 生态基础 | Spring Boot、Spring MVC、Spring Security、Spring Cloud 都建立在 Spring Framework 之上 | ApplicationContext、Environment、事件、条件装配 |
+
+如果面试官问“Spring 为什么能提高可测试性”，不要只说“解耦”。要回答：依赖通过接口和构造器注入，测试时可以直接传入 mock 对象；业务类不需要自己查找或创建依赖，测试环境可以替换 BeanDefinition、使用 @MockBean 或测试配置覆盖真实实现；事务、数据源等基础设施也能通过测试上下文统一控制。
+
+### 2\. Spring Framework、Spring MVC 和 Spring Boot 的边界
+
+Spring Framework 是底层基础框架，核心包括 Core Container、AOP、事务、数据访问、Web、测试等模块。它解决的是对象管理、依赖装配、横切增强和通用基础设施封装问题。
+
+Spring MVC 是 Spring Framework 的 Web MVC 模块，重点是请求分发、参数绑定、控制器调用、视图或 JSON 响应。它依赖 Spring 容器管理 Controller、HandlerMapping、HandlerAdapter 等组件，但它不是 Spring 的全部。
+
+Spring Boot 是基于 Spring Framework 的快速开发和自动配置体系，核心价值是约定优于配置、自动装配、内嵌服务器、Starter 依赖管理和生产级监控。Boot 并没有取代 Spring 容器，而是在 Spring 容器启动阶段帮你注册大量符合条件的 Bean。
+
+面试中可以这样答：“Spring Framework 是基础，Spring MVC 是 Web 表现层模块，Spring Boot 是自动配置和快速启动体系。Boot 项目启动后拿到的仍然是 ApplicationContext，里面仍然是 BeanDefinition、Bean 生命周期、BeanPostProcessor 和 AOP 代理这些机制在工作。”
+
+### 3\. 面试官常见追问与答题抓手
+
+如果被问“Spring 到底核心是什么”，推荐回答顺序是：
+
+1. 先定义：Spring 是以 IoC 容器和 AOP 为核心的企业级 Java 应用框架。
+2. 再解释 IoC：容器负责 Bean 的创建、依赖装配、生命周期和扩展点调用。
+3. 再解释 AOP：通过代理把事务、日志、权限、监控等横切逻辑织入方法调用。
+4. 最后连接工程价值：它减少对象创建和基础设施样板代码，让业务类更关注业务规则，也为 Boot、MVC、Security、Cloud 等生态提供基础。
+
+面试官如果追问“Spring 是不是非侵入”，不要绝对化。更准确的说法是：Spring 支持 POJO 编程，业务类通常不需要继承框架父类或实现框架接口，这是低侵入；但如果使用 @Autowired、@Transactional、ApplicationContextAware 等注解或接口，代码仍然会与 Spring 产生一定绑定。所谓非侵入更强调设计理念，不代表完全没有框架痕迹。
+
+## 二、IoC/DI 容器启动链路
+
+### 1\. IOC 和 DI 的区别
+
+IoC 是 Inversion of Control，控制反转。反转的不是业务流程控制权，而是对象创建、依赖查找和依赖组装的控制权。传统写法是业务类主动 new 依赖对象，或者主动从工厂里查找依赖；Spring 中业务类只声明依赖，容器负责把依赖准备好并注入。
+
+DI 是 Dependency Injection，依赖注入，是 Spring 实现 IoC 最常见的方式。IoC 是思想，DI 是手段。面试时可以说：“IoC 说的是控制权从对象自身转移到容器，DI 说的是容器如何把对象需要的依赖传进去。”
+
+依赖注入常见有三种：
+| 注入方式 | 特点 | 适合场景 | 面试风险点 |
+| --- | --- | --- | --- |
+| 构造器注入 | 依赖在对象创建时必须传入，便于不可变设计 | 必需依赖、核心业务服务 | 循环依赖会更早暴露，构造器循环通常无法解决 |
+| Setter 注入 | 对象先创建，再通过 setter 设置依赖 | 可选依赖、需要后续替换的属性 | 对象可能短暂处于依赖不完整状态 |
+| 字段注入 | 注解写在字段上，代码简洁 | 简单业务代码、历史项目 | 依赖隐藏，不利于测试，不适合 final 字段 |
+
+现在更推荐构造器注入，原因不是“新潮”，而是它把必需依赖显式暴露在构造方法签名里，对象创建后状态完整，也方便单元测试直接传入 mock。字段注入虽然写起来短，但依赖关系藏在字段上，脱离 Spring 容器手动创建对象时容易出现 null。
+
+### 2\. BeanDefinition 链路
+
+Spring 容器启动可以理解为“先读配方，再按配方生产对象”。这个“配方”就是 BeanDefinition。它记录一个 Bean 的 class、scope、lazy-init、depends-on、构造器参数、属性依赖、初始化方法、销毁方法、是否 autowire、factory-method 等元信息。
+
+![images/01-spring-ioc-container-chain.png](../_images/58084ebbeaaf406d84b98e46cb421184.png)
+
+images/01-spring-ioc-container-chain.png
+
+典型 ApplicationContext 启动链路可以按下面理解：
+
+1. 创建 ApplicationContext，准备 Environment、ResourceLoader、事件广播器等上下文基础设施。
+2. 读取 XML、注解、配置类、扫描路径或自动配置导入结果，解析为 BeanDefinition。
+3. 将 BeanDefinition 注册到 BeanDefinitionRegistry，通常底层实现是 DefaultListableBeanFactory。
+4. 执行 BeanFactoryPostProcessor，允许在 Bean 实例化前修改 BeanDefinition。
+5. 注册 BeanPostProcessor，准备后续在 Bean 初始化前后处理实例对象。
+6. 初始化消息源、事件广播器、监听器等 ApplicationContext 扩展能力。
+7. 预实例化非懒加载的 singleton Bean，触发生命周期、依赖注入、初始化和 AOP 代理创建。
+8. 发布容器刷新完成事件，应用进入可用状态。
+
+源码入口上，面试不要求背每一行，但建议知道几组关键方法。AbstractApplicationContext#refresh() 是 ApplicationContext 启动主流程；obtainFreshBeanFactory() 负责获取或刷新 BeanFactory；invokeBeanFactoryPostProcessors() 执行 BeanFactoryPostProcessor；registerBeanPostProcessors() 注册 BeanPostProcessor；finishBeanFactoryInitialization() 触发非懒加载单例 Bean 实例化；DefaultListableBeanFactory#preInstantiateSingletons() 会批量实例化单例 Bean。
+
+这条链路的重点是顺序：BeanFactoryPostProcessor 发生在 Bean 实例化之前，处理的是 BeanDefinition；BeanPostProcessor 发生在 Bean 实例化之后、初始化前后，处理的是 Bean 实例。很多问题都靠这个顺序判断，例如占位符解析、配置类增强、Mapper 扫描属于前期元信息处理，AOP 代理创建属于后期实例处理。
+
+### 3\. BeanFactory、ApplicationContext 和 FactoryBean 的区别
+
+BeanFactory 是 Spring 最底层的 IoC 容器接口，提供 BeanDefinition 管理、Bean 创建、依赖装配和获取 Bean 的能力。常见实现是 DefaultListableBeanFactory。面试官问底层容器，回答 BeanFactory。
+
+ApplicationContext 是更高级的应用上下文，它继承并扩展 BeanFactory，额外提供国际化、事件发布、资源加载、Environment、应用监听器、Web 上下文集成等能力。真实项目里常用的是 ApplicationContext，Spring Boot 启动后拿到的也是它的实现。
+
+FactoryBean 不是容器，而是一种特殊 Bean。普通 Bean 注册后，getBean("xxx") 返回这个 Bean 自身；如果某个 Bean 实现了 FactoryBean&lt;T>，那么 getBean("xxx") 默认返回 FactoryBean#getObject() 创建的产品对象，而不是 FactoryBean 本身。如果要拿 FactoryBean 自身，需要使用 &xxx。MyBatis 的 Mapper 代理、某些复杂第三方对象创建经常会用 FactoryBean 封装。
+
+这三个名词很容易混：
+| 名词 | 本质 | 面试一句话 |
+| --- | --- | --- |
+| BeanFactory | IoC 底层容器 | 管 Bean 定义、创建和依赖装配 |
+| ApplicationContext | 高级容器上下文 | 在 BeanFactory 基础上提供企业级上下文能力 |
+| FactoryBean | 特殊工厂 Bean | 容器管理工厂，工厂生产真正暴露给业务的对象 |
+
+如果被追问“为什么需要 FactoryBean”，可以答：有些对象创建过程很复杂，不适合直接通过构造器或普通属性装配完成，比如需要动态代理、扫描接口、读取外部配置、创建连接资源。FactoryBean 把复杂创建逻辑封装在一个受 Spring 管理的工厂里，让最终使用方仍然像注入普通 Bean 一样使用产品对象。
+
+### 4\. Aware 接口与容器感知
+
+Aware 接口用于让 Bean 感知容器提供的某些资源。常见的有 BeanNameAware、BeanFactoryAware、ApplicationContextAware、EnvironmentAware、ResourceLoaderAware。它们不是依赖注入的主流方式，而是生命周期中的回调扩展点。
+
+面试时要强调：Aware 会让业务对象感知 Spring 容器，侵入性比普通 DI 更强，所以普通业务代码不建议大量使用。它更适合框架组件、基础设施组件、需要发布事件、读取环境变量、动态查找 Bean 的场景。
+
+如果问 “ApplicationContextAware 为什么不推荐滥用”，可以回答：它把对象从“声明依赖”变成“主动从容器查找依赖”，会削弱 IoC 的清晰性。只有在运行时确实需要按名称或类型动态获取 Bean，或者基础设施组件需要访问容器能力时才使用。
+
+## 三、BeanDefinition、后置处理器与自动装配
+
+### 1\. BeanDefinition 元数据
+
+BeanDefinition 是 Spring 创建 Bean 的核心元信息结构。容器并不是扫描到一个类就立刻创建对象，而是先把这个类或配置方法解析成 BeanDefinition，后续所有创建行为都围绕它展开。
+
+BeanDefinition 里常见的信息包括：
+| 信息 | 作用 |
+| --- | --- |
+| beanClass | 指定要实例化的类 |
+| scope | 决定 singleton、prototype、request 等作用域 |
+| constructorArgumentValues | 构造器注入参数 |
+| propertyValues | 属性注入元信息 |
+| initMethodName / destroyMethodName | 初始化与销毁方法 |
+| lazyInit | 是否懒加载 |
+| primary | 多候选 Bean 时是否优先 |
+| factoryBeanName / factoryMethodName | 工厂 Bean 或工厂方法创建对象 |
+
+理解 BeanDefinition 后，很多 Spring 扩展点会变得清楚。@ComponentScan 扫描类，本质是发现候选组件并注册 BeanDefinition；@Bean 方法，本质是把配置方法返回值描述为 BeanDefinition；Spring Boot 自动配置，本质也是在条件满足时向容器注册一批 BeanDefinition。
+
+### 2\. BeanFactoryPostProcessor
+
+BeanFactoryPostProcessor 在 Bean 实例化之前执行，处理对象是 BeanFactory 中已经注册好的 BeanDefinition。它可以修改 BeanDefinition、补充属性、替换占位符、注册额外 BeanDefinition。
+
+高频例子包括：
+| 扩展点 | 作用 |
+| --- | --- |
+| PropertySourcesPlaceholderConfigurer | 解析 ${} 占位符 |
+| ConfigurationClassPostProcessor | 解析 @Configuration、@Bean、@ComponentScan、@Import |
+| MapperScannerConfigurer | 扫描 Mapper 接口并注册代理相关 BeanDefinition |
+| 自定义 BeanFactoryPostProcessor | 批量调整 BeanDefinition 属性 |
+
+面试表达要抓住一句话：BeanFactoryPostProcessor 修改的是 Bean 创建前的元数据，可以理解为修改“生产配方”；它不能依赖普通业务 Bean 已经创建完成，因为此时大多数 Bean 还没有实例化。
+
+如果面试官问“为什么 BeanFactoryPostProcessor 里不建议提前 getBean”，原因是提前获取 Bean 可能触发某些 Bean 过早实例化，使其错过后续 BeanPostProcessor 或 AOP 代理创建，造成生命周期顺序异常。
+
+### 3\. BeanPostProcessor
+
+BeanPostProcessor 在 Bean 实例化、属性填充之后，并围绕初始化方法前后执行。它处理的是 Bean 实例对象，所以可以做包装、代理、校验、注入扩展等事情。
+
+常见 BeanPostProcessor 包括：
+| 扩展点 | 作用 |
+| --- | --- |
+| AutowiredAnnotationBeanPostProcessor | 处理 @Autowired、@Value 等注入 |
+| CommonAnnotationBeanPostProcessor | 处理 @Resource、@PostConstruct、@PreDestroy |
+| AnnotationAwareAspectJAutoProxyCreator | 根据切面创建 AOP 代理 |
+| ApplicationContextAwareProcessor | 处理部分 Aware 回调 |
+
+很多 AOP 代理是在 postProcessAfterInitialization 阶段返回的。也就是说，容器内部最开始创建的是原始对象，经过后置处理器后，最终放入单例池、注入给其他 Bean 或返回给业务代码的可能是代理对象。这个细节是理解事务、内部调用失效、循环依赖中提前暴露代理的基础。
+
+### 4\. 自动装配的候选选择规则
+
+@Autowired 默认按类型注入。容器会先根据字段、构造器参数或方法参数类型查找候选 Bean；如果只有一个候选，直接注入；如果有多个候选，再根据 @Primary、@Qualifier、参数名或字段名等规则缩小范围；如果仍然无法唯一确定，就抛出 NoUniqueBeanDefinitionException。
+
+@Resource 来自 Jakarta/Java 规范，默认更偏向按名称查找。如果指定 name，优先按名称；没有指定时通常使用字段名或属性名作为名称查找，找不到再按类型匹配。实际项目中二者都能用，但不要在同一模块里混乱使用，否则排查候选 Bean 时会增加心智成本。
+
+常见注解要这样区分：
+| 注解 | 作用 | 面试重点 |
+| --- | --- | --- |
+| @Component | 通用组件注册 | 被扫描到后注册为 Bean |
+| @Service | 业务层组件 | 语义化的 @Component |
+| @Repository | 持久层组件 | 语义化组件，早期还涉及异常转换 |
+| @Controller | Web 控制器 | Spring MVC 识别处理器 |
+| @Bean | 方法返回值注册为 Bean | 常用于第三方对象、配置类中显式声明 |
+| @Configuration | 配置类 | Full 模式下通过 CGLIB 保证 @Bean 方法单例语义 |
+| @Qualifier | 指定候选 Bean 名称或限定符 | 解决同类型多实现冲突 |
+| @Primary | 默认优先候选 | 多候选时提供默认实现 |
+
+@Bean 和 @Component 的区别经常被问。@Component 适合注册自己写的类，靠扫描发现；@Bean 适合注册第三方类、复杂初始化对象、需要根据配置手动创建的对象。比如 RestTemplate、第三方 SDK Client、线程池、序列化器等通常使用 @Bean。
+
+条件装配是 Spring Boot 自动配置的基础。@ConditionalOnClass 表示类路径存在某个类才装配，@ConditionalOnMissingBean 表示容器中没有某类 Bean 才装配默认实现，@ConditionalOnProperty 表示配置开关满足时装配。它的核心逻辑不是“自动猜测”，而是根据 classpath、环境配置、已有 Bean、Web 应用类型等条件决定是否注册 BeanDefinition。
+
+## 四、Bean 创建流程与生命周期
+
+### 1\. Bean 生命周期的完整阶段
+
+Bean 生命周期题的价值在于串联 IoC、依赖注入、Aware、后置处理器、初始化、AOP 代理和销毁。只说“实例化、属性赋值、初始化、销毁”太粗。更适合面试的回答是按容器内部链路讲：
+
+![images/01-spring-bean-lifecycle.png](../_images/724bdd733419475685f61f24f9e7d5b4.png)
+
+images/01-spring-bean-lifecycle.png
+
+典型 singleton Bean 创建流程如下：
+
+1. 根据 beanName 获取 BeanDefinition，合并父子 BeanDefinition，准备创建。
+2. 推断构造方法，解析构造参数，通过构造器或工厂方法实例化原始对象。
+3. 如果允许循环依赖，单例 Bean 实例化后、属性填充前，可能提前暴露 ObjectFactory。
+4. 进行属性填充，处理 @Autowired、@Resource、@Value 等依赖注入。
+5. 执行 Aware 回调，例如 BeanNameAware、BeanFactoryAware、ApplicationContextAware。
+6. 执行 BeanPostProcessor 的初始化前处理。
+7. 执行初始化方法，例如 @PostConstruct、InitializingBean#afterPropertiesSet、自定义 init-method。
+8. 执行 BeanPostProcessor 的初始化后处理，AOP 代理通常在这里生成并返回。
+9. Bean 进入可用状态，放入单例池或返回给调用方。
+10. 容器关闭时执行销毁回调，例如 @PreDestroy、DisposableBean#destroy、自定义 destroy-method。
+
+源码入口可以记住几处：AbstractBeanFactory#doGetBean() 是获取 Bean 主入口；AbstractAutowireCapableBeanFactory#createBean() 和 doCreateBean() 是创建 Bean 的核心；createBeanInstance() 负责实例化；populateBean() 负责属性填充；initializeBean() 负责 Aware、初始化前后处理器和初始化方法；DefaultSingletonBeanRegistry 负责单例缓存。
+
+### 2\. 实例化、属性填充与初始化
+
+实例化是创建对象本体，解决“有没有这个对象”。它可以通过构造器、静态工厂方法、实例工厂方法、FactoryBean 等方式完成。实例化阶段只说明对象内存已经有了，不代表依赖已经完整。
+
+属性填充解决“这个对象依赖谁”。Spring 会根据 BeanDefinition 的属性值、自动装配注解、类型匹配和名称匹配把依赖注入进来。字段注入、setter 注入都主要发生在这个阶段。构造器注入比较特殊，它在实例化时就要解析依赖。
+
+初始化解决“对象拿到依赖后还需要做什么准备”。比如建立连接、加载缓存、校验配置、注册监听器等。@PostConstruct、InitializingBean、自定义 init-method 都属于初始化逻辑。初始化前后的 BeanPostProcessor 则给框架提供机会，比如处理 Aware、生成代理、注入扩展资源。
+
+销毁阶段解决“容器关闭时如何释放资源”。只对容器管理生命周期的 Bean 有意义，典型 singleton Bean 会在容器关闭时触发销毁；prototype Bean 创建后交给调用方使用，Spring 通常不负责完整销毁回调，因此 prototype 中持有资源要格外小心。
+
+### 3\. AOP 代理创建时机与最终暴露对象
+
+AOP 代理通常由 AnnotationAwareAspectJAutoProxyCreator 这类 AutoProxyCreator 完成，它本身是 BeanPostProcessor。目标 Bean 完成实例化、属性填充和初始化后，后置处理器判断它是否匹配某些 Advisor。如果匹配，就用 JDK 动态代理或 CGLIB 创建代理对象，并把代理对象作为最终 Bean 暴露出去。
+
+这意味着业务代码从容器拿到的对象可能不是原始对象，而是代理对象。事务、缓存、异步、权限等增强都依赖这个事实。面试里可以直接说：@Transactional 不是把代码改写到方法内部，而是在目标对象外面包了一层代理，外部调用先进代理，再由事务拦截器开启、提交或回滚事务。
+
+代理创建时机还有一个特殊点：循环依赖场景中，某个 Bean 可能需要被提前暴露。如果这个 Bean 最终需要 AOP 代理，三级缓存中的 ObjectFactory 会尝试提前返回代理引用，避免其他 Bean 注入到原始对象，而容器最终保存代理对象，导致引用不一致。
+
+### 4\. 生命周期常见追问
+| 追问 | 答题要点 |
+| --- | --- |
+| @PostConstruct 和 InitializingBean 谁先执行 | @PostConstruct 通常由 CommonAnnotationBeanPostProcessor 在初始化前后流程中触发，早于 afterPropertiesSet 和自定义 init-method |
+| BeanPostProcessor 和 BeanFactoryPostProcessor 区别 | 前者处理 Bean 实例，后者处理 BeanDefinition |
+| Aware 发生在什么时候 | 属性填充之后、初始化方法之前 |
+| AOP 代理在哪一步生成 | 通常在初始化后的 BeanPostProcessor 中生成 |
+| prototype Bean 生命周期谁负责销毁 | Spring 负责创建和注入，后续销毁通常由使用方负责 |
+| 为什么不要在构造器里做复杂业务初始化 | 构造器阶段依赖可能还没完全注入，AOP 代理也尚未形成 |
+
+项目表达可以这样讲：“我们项目里一些 SDK Client、线程池、缓存预热组件会在初始化方法里做配置校验或资源准备，关闭时通过 destroy 方法释放资源。普通 Service 不建议在构造器里访问数据库或调用远程服务，因为那时依赖和代理链路都还没完全稳定。”
+
+## 五、循环依赖与三级缓存
+
+### 1\. 循环依赖支持范围
+
+循环依赖指两个或多个 Bean 互相依赖，比如 A 依赖 B，B 又依赖 A。Spring 能解决一部分循环依赖，但不是所有循环依赖。能解决的典型场景是 singleton Bean 的 setter 注入或字段注入循环依赖；不能解决或不建议依赖容器解决的典型场景是构造器循环依赖、prototype 循环依赖，以及某些复杂代理导致的提前暴露不一致。
+
+![images/01-spring-circular-dependency-cache.png](../_images/fe1499f05c4b4fe1922f4352d2d9dcf6.png)
+
+images/01-spring-circular-dependency-cache.png
+
+面试时一定要先说边界：“Spring 通过三级缓存解决的是单例 Bean 在属性注入阶段形成的循环依赖，不是所有循环依赖。”这句话很重要，因为很多人一上来就说“Spring 用三级缓存解决循环依赖”，容易被追问打穿。
+
+### 2\. 三级缓存内容
+
+Spring 单例创建相关的三级缓存主要在 DefaultSingletonBeanRegistry 中：
+| 缓存 | 内容 | 状态 |
+| --- | --- | --- |
+| singletonObjects | 完整初始化后的单例 Bean | 一级缓存，成品 |
+| earlySingletonObjects | 提前暴露的早期 Bean 引用 | 二级缓存，半成品引用 |
+| singletonFactories | 能生成早期引用的 ObjectFactory | 三级缓存，延迟决定是否代理 |
+
+创建 A 时，Spring 实例化 A 后，发现它是 singleton，且允许循环依赖，就会把一个能返回 A 早期引用的 ObjectFactory 放入三级缓存。此时 A 还没有完成属性注入和初始化。A 填充属性时需要 B，于是开始创建 B。B 填充属性时又需要 A，容器发现 A 正在创建中，就尝试从缓存获取 A。一级缓存没有完整 A，二级缓存也可能还没有早期引用，于是从三级缓存调用 ObjectFactory 获取早期引用，放入二级缓存并删除三级缓存中的工厂。B 注入早期 A 后完成创建，A 再继续注入完整 B，最终 A 初始化完成并进入一级缓存。
+
+这套流程的本质是：先让一个已经实例化但未完成初始化的单例对象提前暴露引用，让另一个 Bean 可以先完成依赖注入。它解决的是“对象已经有了，只是属性还没填完”的问题。
+
+### 3\. 构造器循环依赖的失败原理
+
+构造器循环依赖无法解决，是因为构造器注入要求依赖对象在当前对象实例化之前就已经准备好。A 的构造器需要 B，意味着 A 还没法实例化；B 的构造器又需要 A，意味着 B 也没法实例化。双方都没有形成“可提前暴露的半成品对象”，三级缓存就没有可放的早期引用。
+
+这也是构造器注入的一个特点：它会更早暴露设计问题。如果两个核心服务互相通过构造器强依赖，通常说明职责边界有问题。工程上更好的方式是拆出第三个协调组件、引入事件发布、调整依赖方向，或者把可选依赖改成懒加载代理，而不是依赖循环注入本身。
+
+### 4\. prototype 和 AOP 提前暴露的限制
+
+prototype Bean 每次获取都会创建新实例，容器不会像 singleton 那样维护完整的单例缓存链路。A prototype 依赖 B prototype，B prototype 又依赖 A prototype 时，每次创建都需要新对象，无法通过一个稳定的全局早期引用打破循环。因此 prototype 循环依赖通常无法由 Spring 自动解决。
+
+AOP 代理让循环依赖更复杂。假设 A 最终需要被代理，如果 B 在循环依赖过程中注入了 A 的原始对象，而容器最终对外暴露的是 A 的代理对象，就会出现 B 中持有的引用和容器中的 A 不一致，事务或切面也可能失效。三级缓存中的 ObjectFactory 正是为了解决这个问题：当确实需要提前暴露 A 时，可以通过 getEarlyBeanReference() 让 AutoProxyCreator 有机会提前返回代理对象。
+
+为什么不是直接二级缓存保存早期对象？因为不是所有 Bean 都一定会发生循环依赖，也不是所有 Bean 都需要代理。三级缓存用 ObjectFactory 延迟创建早期引用，只有在真的被别的 Bean 提前引用时才决定返回原始对象还是代理对象。这样既减少不必要的提前代理，也保证循环依赖场景下引用尽量一致。
+
+面试官可能追问“Spring Boot 2.6 之后循环依赖默认行为变化”。可以回答：新版 Boot 默认倾向于禁止循环依赖，配置上可以通过 spring.main.allow-circular-references 调整，但工程上更推荐消除循环依赖。因为循环依赖往往意味着模块职责不清，依靠容器兜底会让设计问题隐藏得更深。
+
+## 六、AOP 代理机制与调用链
+
+### 1\. AOP 术语
+
+AOP 是 Aspect Oriented Programming，面向切面编程。它用于把多个业务模块共同需要的横切逻辑抽离出来，例如事务、日志、权限、限流、缓存、监控。Spring AOP 的核心不是编译期改写代码，而是运行期通过代理对象拦截方法调用，在调用前后执行增强逻辑。
+
+![images/01-spring-aop-proxy-chain.png](../_images/0cc4d483687543fcb8d0ecd347b0a2a8.png)
+
+images/01-spring-aop-proxy-chain.png
+
+常见术语要这样理解：
+| 术语 | 含义 | 代码对应 |
+| --- | --- | --- |
+| JoinPoint | 可被增强的连接点 | Spring AOP 主要是方法执行 |
+| Pointcut | 筛选哪些连接点需要增强 | execution(...)、注解匹配等表达式 |
+| Advice | 增强逻辑 | @Before、@AfterReturning、@Around |
+| Advisor | Pointcut + Advice 的组合 | Spring 内部匹配和调用链构建单元 |
+| Aspect | 切面 | 通常是 @Aspect 类 |
+| Target | 原始业务对象 | 真实 Service 对象 |
+| Proxy | 代理对象 | 容器最终暴露给外部调用的对象 |
+
+面试里不要只背名词，要说明调用链。外部调用代理对象的方法，代理对象根据目标方法匹配到一组 Advisor，把 Advice 组织成拦截器链。执行时先按顺序进入前置或环绕增强，再调用目标方法，目标方法返回或抛异常后，再触发返回、异常、后置增强。事务、缓存、权限等功能都可以理解为拦截器链中的一个环节。
+
+### 2\. JDK 动态代理和 CGLIB 的区别
+
+Spring AOP 常见两种代理方式：JDK 动态代理和 CGLIB。
+
+JDK 动态代理基于接口。目标类实现接口时，代理对象实现同样的接口，方法调用会进入 InvocationHandler。它的限制是只能代理接口方法。如果业务代码按具体实现类类型注入，而实际生成的是接口代理，可能出现类型不匹配问题。
+
+CGLIB 基于继承。它通过生成目标类的子类并重写方法来织入增强，因此不要求目标类实现接口。但它不能代理 final 类，也不能增强 final 方法，因为 final 阻止继承或重写。private 方法不能被子类重写，也无法作为外部代理调用点被增强。static 方法属于类，不属于对象实例的虚方法调用，同样不适合 Spring AOP 代理增强。
+
+对比表：
+| 维度 | JDK 动态代理 | CGLIB |
+| --- | --- | --- |
+| 基础 | 接口 | 继承 |
+| 目标类要求 | 需要接口 | 不需要接口 |
+| 代理对象类型 | 接口实现类 | 目标类子类 |
+| 不能增强 | 非接口方法 | final/private/static 等无法重写的方法 |
+| 常见场景 | 接口驱动设计 | 无接口的 Service 类 |
+
+现在 Spring Boot 项目中常见 CGLIB 代理，但面试不要绝对说“Spring 默认都是 CGLIB”。更准确的是：Spring AOP 可以根据配置和目标类情况选择 JDK 或 CGLIB；Boot 里常因为 proxyTargetClass 配置倾向使用 CGLIB，但底层原理仍然是代理拦截方法调用。
+
+### 3\. AOP 内部调用失效的原理
+
+Spring AOP 是代理模式，增强逻辑发生在“外部调用代理对象”的路径上。同一个类内部用 this.method() 调用另一个方法时，调用没有经过代理对象，而是直接在目标对象内部完成，因此事务、缓存、异步等基于代理的增强都不会触发。
+
+典型例子：
+
+@Service 
+public class OrderService { 
+public void createOrder() { 
+saveOrder(); // 内部调用，没有经过代理 
+} 
+ 
+@Transactional 
+public void saveOrder() { 
+// 数据库写入 
+} 
+}
+
+外部调用 orderService.saveOrder() 时，如果 orderService 是代理对象，事务可以生效；但外部调用 createOrder() 后，内部直接调用 saveOrder()，事务增强不会自动套上去。解决方式通常有：把被增强方法拆到另一个 Bean，通过外部 Bean 调用；从容器获取当前代理再调用；使用 AspectJ 编译期或类加载期织入。但项目里最推荐的是调整职责边界，把事务边界放在外部可被代理调用的方法上。
+
+### 4\. AOP 失效与限制清单
+
+AOP 失效常见原因可以按“是否能生成代理”和“调用是否经过代理”两类排查：
+| 场景 | 原因 | 处理方式 |
+| --- | --- | --- |
+| 对象不是 Spring Bean | 容器没有机会创建代理 | 交给容器管理，不要手动 new |
+| 同类内部调用 | 调用绕过代理对象 | 拆分 Bean 或通过代理调用 |
+| 方法是 private | 外部无法代理调用，CGLIB 也无法重写 | 改为可代理的业务方法 |
+| 方法是 final | CGLIB 无法重写 | 去掉 final 或改用接口代理可代理接口方法 |
+| 类是 final | CGLIB 无法生成子类 | 去掉 final 或提供接口 |
+| 方法是 static | 不属于实例方法代理链 | 改为实例方法 |
+| 切点表达式不匹配 | Advisor 没有被应用 | 检查包路径、注解、方法签名 |
+| Bean 过早实例化 | 错过自动代理后置处理器 | 避免在早期后置处理器中提前 getBean |
+
+项目表达时可以说：“我们排查 AOP 或事务问题时，先确认当前对象是不是容器里的代理 Bean，再看调用路径有没有经过代理，最后看方法签名和切点是否满足代理条件。”
+
+## 七、声明式事务、传播和回滚
+
+### 1\. 声明式事务与 AOP
+
+@Transactional 声明式事务本质上是 Spring AOP 的一个典型应用。容器为目标 Bean 创建事务代理，外部调用进入代理后，TransactionInterceptor 根据事务属性决定是否开启事务、加入事务、挂起事务、创建保存点、提交或回滚。目标方法正常返回时尝试提交；抛出符合回滚规则的异常时回滚。
+
+所以事务题必须和 AOP 放在一起答。@Transactional 不会因为注解写在方法上就自动改变字节码，它需要目标对象是 Spring Bean，需要事务增强被匹配到，需要调用经过代理，还需要异常符合回滚规则。
+
+事务执行链路可以概括为：
+
+1. 代理对象拦截方法调用。
+2. 读取 @Transactional 上的传播行为、隔离级别、超时、只读、回滚规则等属性。
+3. 通过 PlatformTransactionManager 获取或创建事务。
+4. 执行业务方法。
+5. 根据返回或异常决定提交、回滚或标记 rollback-only。
+6. 清理线程绑定资源，例如连接、事务同步状态。
+
+### 2\. 事务传播行为
+
+传播行为解决的是：一个事务方法调用另一个事务方法时，当前已经有事务或没有事务，应该如何处理。
+| 传播行为 | 有事务时 | 没事务时 | 高频理解 |
+| --- | --- | --- | --- |
+| REQUIRED | 加入当前事务 | 新建事务 | 默认，最常用 |
+| REQUIRES_NEW | 挂起当前事务，新建事务 | 新建事务 | 内外事务相互独立 |
+| SUPPORTS | 加入当前事务 | 非事务执行 | 查询类方法可见 |
+| NOT_SUPPORTED | 挂起当前事务，非事务执行 | 非事务执行 | 不希望占用事务资源 |
+| MANDATORY | 加入当前事务 | 抛异常 | 强制上层必须开事务 |
+| NEVER | 抛异常 | 非事务执行 | 禁止事务环境 |
+| NESTED | 在当前事务内创建保存点 | 新建事务 | 内层可回滚到保存点 |
+
+REQUIRES\_NEW 和 NESTED 是面试高频对比。REQUIRES\_NEW 是挂起外层事务，开启一个完全独立的新事务。内层提交后，即使外层后来回滚，内层已经提交的数据通常不会回滚。它适合审计日志、操作记录等需要独立提交的场景，但也要注意连接资源占用。
+
+NESTED 是嵌套事务，通常依赖数据库保存点。内层失败可以回滚到保存点，不一定影响外层继续执行；但外层最终回滚时，内层结果也会一起回滚。它不是两个完全独立事务，而是一个物理事务中的局部回滚点。
+
+### 3\. 事务隔离级别
+
+Spring 的隔离级别本质是把隔离配置传给底层数据库连接，最终能达到什么效果取决于数据库实现。
+| 隔离级别 | 解决问题 | 说明 |
+| --- | --- | --- |
+| DEFAULT | 使用数据库默认隔离级别 | MySQL InnoDB 默认 REPEATABLE READ |
+| READ_UNCOMMITTED | 基本不隔离 | 可能脏读、不可重复读、幻读 |
+| READ_COMMITTED | 避免脏读 | Oracle 默认，MySQL 也支持 |
+| REPEATABLE_READ | 避免脏读、不可重复读 | MySQL InnoDB 默认，结合 MVCC 和锁处理幻读 |
+| SERIALIZABLE | 最强隔离 | 并发性能最低 |
+
+回答隔离级别不要只背“脏读、不可重复读、幻读”。要补一句：Spring 不直接实现数据库隔离，它只是通过事务管理器把隔离级别设置到底层连接；具体锁、MVCC、间隙锁、快照读等行为要结合数据库复习。
+
+### 4\. 回滚规则、只读事务与失效场景
+
+Spring 默认只对 RuntimeException 和 Error 回滚，对受检异常不默认回滚。如果业务方法抛出 IOException、SQLException 这类受检异常，而没有配置 rollbackFor = Exception.class，事务可能提交。很多项目中的“明明抛异常但没回滚”都和这个规则有关。
+
+异常被 catch 后不继续抛出，也会导致事务拦截器认为方法正常结束，从而提交事务。如果确实要捕获异常并回滚，可以继续抛出运行时异常，或者调用 TransactionAspectSupport.currentTransactionStatus().setRollbackOnly() 标记回滚，但后者会增加代码对 Spring 事务 API 的耦合，优先用清晰的异常传播更好。
+
+只读事务 readOnly = true 不是强制禁止所有写入的安全开关。它更多是给事务管理器、数据库驱动或 ORM 框架一个优化提示，例如减少脏检查、选择只读连接等。不同数据库和框架支持程度不同，因此不能把只读事务当成权限控制。面试可答：只读事务适合查询方法表达意图和优化，但真正禁止写入应靠权限、数据库账号、代码规范或读写分离策略。
+
+事务失效场景高频清单：
+| 失效场景 | 为什么失效 |
+| --- | --- |
+| 同类内部调用事务方法 | 没有经过代理对象 |
+| 方法不是 public | Spring 基于代理时可能无法正确拦截或事务属性不生效 |
+| 类或方法无法代理 | final/private/static 等限制 |
+| 对象不是 Spring Bean | 容器没有创建事务代理 |
+| 异常被 catch 吞掉 | 事务拦截器看不到异常 |
+| 抛受检异常未配置 rollbackFor | 默认不回滚 |
+| 多线程中使用事务上下文 | 事务资源通常绑定当前线程，新线程不继承 |
+| 数据库或表不支持事务 | 底层无法回滚，例如不支持事务的存储引擎 |
+| 切点或事务注解位置不对 | 没匹配到事务增强 |
+
+项目表达模板：“我们项目里事务一般放在 Service 层的 public 方法上，避免 Controller 直接控制事务，也避免 DAO 层碎片化事务。涉及多表写入时用 REQUIRED 保证原子性；审计日志这类不希望跟主事务一起回滚的场景会考虑 REQUIRES\_NEW；异常规则上统一用运行时业务异常或显式配置 rollbackFor，避免受检异常导致事务提交。”
+
+## 八、自动装配冲突、注入为 null 与排查方法
+
+### 1\. 注入为 null 排查
+
+“@Autowired 注入为 null”最常见原因不是 Spring 注解坏了，而是当前对象根本不是 Spring 容器创建的。只要对象是自己 new 出来的，Spring 就没有机会执行字段注入、Aware 回调、BeanPostProcessor 和 AOP 代理。
+
+排查顺序建议这样讲：
+
+1. 当前类是不是 Spring Bean。检查是否有 @Component、@Service、@Controller、@Configuration 或通过 @Bean 注册。
+2. 当前对象是不是从容器获取的。即使类上有注解，如果代码里手动 new，注入仍然不会发生。
+3. 组件扫描路径是否覆盖。检查启动类包路径、@ComponentScan、多模块包名、测试上下文配置。
+4. 被依赖对象是否注册为 Bean。第三方类需要 @Bean，接口实现类需要组件注解或配置注册。
+5. 是否存在条件装配未满足。检查 @Conditional、配置开关、classpath、profile。
+6. 是否用了 static 或不合适的 final 字段。Spring 不会正常给 static 字段做普通依赖注入，final 字段更适合构造器注入。
+7. 是否是测试环境未加载完整上下文。检查 @SpringBootTest、@WebMvcTest、mock 配置等。
+
+如果面试官让你结合项目说明，可以说：“我会先看对象来源。如果是在工具类、监听器、线程任务里手动 new 出来的对象，字段注入一定不会生效。解决方式通常是把它注册为 Bean，通过构造器注入依赖，或者把需要依赖的逻辑移到 Spring 管理的组件里。”
+
+### 2\. Bean 冲突排查
+
+Bean 冲突通常表现为 NoUniqueBeanDefinitionException，意思是按类型找到了多个候选，Spring 不知道该注入哪个。比如接口 PayService 有 AliPayService 和 WxPayService 两个实现，某个字段只写 @Autowired private PayService payService;，容器就可能无法确定。
+
+解决方式有四类：
+| 方式 | 适用场景 | 示例 |
+| --- | --- | --- |
+| @Qualifier | 注入点明确指定名称 | @Qualifier("aliPayService") |
+| @Primary | 给默认实现设优先级 | 常用默认策略 |
+| @Resource(name=...) | 按名称注入 | 适合命名明确的 Bean |
+| 集合注入 | 运行时按业务选择 | Map&lt;String, PayService> |
+
+集合注入在项目中很常见。比如支付渠道、消息发送渠道、导出策略、风控规则都可以注入 Map&lt;String, Strategy>，再根据业务场景选择具体实现。这样比大量 if-else 和手写工厂更容易扩展，也能借助 Spring 管理每个策略的依赖和生命周期。
+
+如果被问“@Primary 和 @Qualifier 谁优先”，可以回答：@Qualifier 是注入点明确指定候选，一般比 @Primary 更精确；@Primary 是类型匹配出现多个候选时的默认优先选择。项目里对于核心默认实现可以用 @Primary，对于某个具体场景要指定实现时用 @Qualifier。
+
+### 3\. 条件装配导致 Bean 缺失的排查方法
+
+Spring Boot 自动配置下，很多 Bean 是否存在取决于条件。比如类路径中没有某个 starter，@ConditionalOnClass 不满足；配置开关没打开，@ConditionalOnProperty 不满足；用户自己定义了同类型 Bean，@ConditionalOnMissingBean 就不会再注册默认 Bean。
+
+排查时可以看三类信息：
+
+1. 启动日志和异常栈。很多自动配置会说明缺少类、缺少 Bean 或候选冲突。
+2. Actuator 的 /actuator/beans 和 /actuator/conditions。前者看容器里有哪些 Bean，后者看自动配置条件为什么匹配或不匹配。
+3. IDE 搜索自动配置类和条件注解。看 BeanDefinition 到底是在什么条件下注册的。
+
+面试表达：“Boot 的自动装配不是魔法，它本质上是条件满足时注册 BeanDefinition。排查 Bean 缺失时，我会从 classpath、配置属性、已有 Bean、Profile 和扫描路径几个方向查，而不是只盯着 @Autowired。”
+
+## 九、面试追问与答题模板
+
+### 1\. 高频追问表
+| 面试问题 | 推荐回答抓手 | 容易被追问 |
+| --- | --- | --- |
+| Spring 核心是什么 | IoC 管对象，AOP 管增强，生态管基础设施 | 如何降低耦合，Spring MVC/Boot 区别 |
+| IoC 和 DI 区别 | IoC 是控制权反转思想，DI 是依赖注入实现方式 | 控制权具体指什么 |
+| BeanFactory 和 ApplicationContext 区别 | 底层容器 vs 高级上下文 | 项目里用哪个，Boot 启动后是什么 |
+| BeanDefinition 是什么 | Bean 的元数据配方 | 什么时候注册，谁会修改 |
+| BeanFactoryPostProcessor 和 BeanPostProcessor 区别 | 改配方 vs 改实例 | AOP 代理属于哪个 |
+| FactoryBean 是什么 | 容器管理的工厂 Bean，返回产品对象 | &beanName 的作用 |
+| Bean 生命周期 | 定义、实例化、属性填充、Aware、BPP、初始化、代理、销毁 | AOP 代理什么时候创建 |
+| 循环依赖如何解决 | singleton + 属性注入 + 三级缓存 | 构造器为什么不行，AOP 怎么提前暴露 |
+| JDK 和 CGLIB 区别 | 接口代理 vs 继承代理 | final/private/static 限制 |
+| AOP 为什么内部调用失效 | 调用没有经过代理对象 | 怎么解决 |
+| @Transactional 为什么失效 | 代理没经过或异常规则没触发 | 传播行为、rollbackFor |
+| REQUIRED 和 REQUIRES_NEW 区别 | 加入当前事务 vs 挂起并新建事务 | 内外事务回滚关系 |
+| NESTED 和 REQUIRES_NEW 区别 | 保存点 vs 独立事务 | 数据库是否支持保存点 |
+| @Autowired 和 @Resource 区别 | 按类型优先 vs 按名称优先 | 多实现如何解决 |
+| 注入为 null 怎么排查 | 对象是否入容器、扫描、依赖是否存在、条件装配 | 手动 new、static 字段 |
+
+### 2\. 标准答题模板
+
+问：什么是 Spring？
+
+答：Spring 是以 IoC 容器和 AOP 为核心的 Java 企业级应用基础框架。IoC 容器负责 Bean 的定义解析、创建、依赖注入、生命周期管理和扩展点调用，让业务对象不需要自己创建和查找依赖。AOP 负责通过代理机制把事务、日志、权限、缓存、监控等横切逻辑织入方法调用。基于这些能力，Spring 又提供了事务、数据访问、Web、测试和第三方框架集成，所以它不是单纯的 Web 框架，而是 Java 后端生态的基础设施。
+
+问：Bean 生命周期怎么讲？
+
+答：我会按容器创建链路讲。首先配置或注解会被解析成 BeanDefinition；然后容器根据 BeanDefinition 实例化 Bean；接着进行属性填充，也就是依赖注入；然后执行 Aware 回调；再执行 BeanPostProcessor 的初始化前处理；之后执行 @PostConstruct、InitializingBean 或自定义 init-method；再执行初始化后的 BeanPostProcessor，AOP 代理通常在这个阶段生成；Bean 可用后进入单例池；容器关闭时执行 @PreDestroy、DisposableBean 或 destroy-method。重点是 BeanFactoryPostProcessor 处理 BeanDefinition，BeanPostProcessor 处理 Bean 实例。
+
+问：Spring 怎么解决循环依赖？
+
+答：Spring 主要通过三级缓存解决 singleton Bean 的 setter 或字段注入循环依赖。一级缓存保存完整单例对象，二级缓存保存提前暴露的早期引用，三级缓存保存能生成早期引用的 ObjectFactory。A 创建后还没填充属性时，会把早期引用工厂放入三级缓存；A 依赖 B，B 又依赖 A 时，B 可以通过三级缓存拿到 A 的早期引用先完成注入。三级缓存存在的关键原因是 AOP，如果 A 最终需要代理，ObjectFactory 可以在提前暴露时返回代理引用，避免其他 Bean 注入原始对象。但构造器循环依赖不行，因为对象还没实例化，没有早期引用可暴露；prototype 循环依赖也不适用，因为没有稳定的单例缓存链路。
+
+问：为什么事务会失效？
+
+答：Spring 声明式事务本质是 AOP 代理。事务失效通常有两类原因：第一类是调用没有经过代理，比如同类内部调用、对象不是 Spring Bean、方法 final/private/static 或切点不匹配；第二类是异常没有触发回滚，比如异常被 catch 吞掉、抛受检异常但没有配置 rollbackFor。另外底层数据库表不支持事务、多线程切换导致事务上下文不在同一线程，也会造成预期外行为。
+
+问：自动装配冲突怎么办？
+
+答：先确认是候选 Bean 不存在还是候选 Bean 太多。如果不存在，就查注册、扫描路径、条件装配、Profile 和测试上下文；如果太多，就用 @Qualifier 指定名称、用 @Primary 指定默认实现、用 @Resource(name=...) 按名称注入，或者注入 List / Map 由业务按场景选择。项目中策略模式常用 Map&lt;String, Strategy> 注入所有实现，再根据业务 code 选择具体策略。
+
+### 3\. 项目表达模板
+
+讲项目时不要只说“用了 Spring Boot”。更有信息量的表达是：
+
+“项目里核心业务组件都交给 Spring 容器管理，Service 层主要通过构造器注入依赖，避免字段注入导致依赖关系不清。支付、通知、导出这类多实现能力通过接口加 Map&lt;String, Strategy> 集合注入实现扩展。事务边界放在 Service 的 public 方法上，默认用 REQUIRED 保证多表写入原子性，审计日志这类希望独立提交的场景会考虑 REQUIRES\_NEW。排查事务或缓存不生效时，会先确认调用是否经过 Spring 代理，再看异常回滚规则和切点匹配。”
+
+这段表达的价值是把 IoC、DI、策略扩展、事务传播和 AOP 代理串起来，面试官继续追问时，你可以自然展开到 Bean 生命周期、自动装配候选、事务失效和代理限制。
+
+## 十、复习优先级
+
+### 1\. P0 核心复习清单
+
+P0 是 Spring 面试的底座，必须能连贯讲清：
+| 模块 | 必须掌握 |
+| --- | --- |
+| Spring 定位 | IoC、AOP、事务、生态基础，区别 Framework/MVC/Boot |
+| IoC/DI | 控制权反转、依赖注入方式、构造器注入优势 |
+| 容器启动 | BeanDefinition、BeanFactoryPostProcessor、BeanPostProcessor、ApplicationContext |
+| Bean 生命周期 | 实例化、属性填充、Aware、初始化、代理、销毁 |
+| 循环依赖 | 三级缓存、适用条件、构造器和 prototype 限制、AOP 提前代理 |
+| AOP | JDK/CGLIB、Advisor、调用链、内部调用失效 |
+| 事务 | 传播行为、隔离级别、回滚规则、失效场景 |
+| 自动装配 | @Autowired、@Resource、@Qualifier、@Primary、@Bean |
+
+### 2\. P1 追问清单
+
+P1 是面试官追深时的加分项：
+
+1. 能说出 AbstractApplicationContext#refresh() 是容器启动主流程。
+2. 能说出 DefaultListableBeanFactory 是常见 BeanFactory 实现。
+3. 能区分 BeanDefinitionRegistry、BeanFactory、ApplicationContext 的职责。
+4. 能解释 AutoProxyCreator 是 BeanPostProcessor。
+5. 能解释 FactoryBean 返回产品对象，&beanName 返回工厂本身。
+6. 能解释 @Configuration 配置类为什么可能被 CGLIB 增强。
+7. 能说明事务资源通常绑定线程，多线程中事务上下文不会自然传播。
+8. 能结合项目讲一次 Bean 冲突或事务失效排查。
+
+### 3\. 自测问题
+
+复习完这篇以后，可以用下面的问题自测。如果每个问题都能在 1 到 2 分钟内讲出定义、机制、边界和项目表达，Spring 核心原理这一块基本就稳了。
+| 自测问题 | 合格标准 |
+| --- | --- |
+| Spring 如何降低耦合 | 能说出对象创建权、依赖选择权、横切逻辑从业务代码中剥离 |
+| 容器启动主流程是什么 | 能从 BeanDefinition 讲到后置处理器和单例预实例化 |
+| BeanPostProcessor 为什么重要 | 能连接依赖注入、生命周期和 AOP 代理 |
+| 循环依赖为什么要三级缓存 | 能说出 ObjectFactory 和 AOP 早期代理 |
+| 构造器循环依赖为什么不行 | 能说出对象尚未实例化，没有早期引用 |
+| AOP 内部调用为什么失效 | 能说出调用没有经过代理对象 |
+| 事务什么时候回滚 | 能说出默认运行时异常和 Error，受检异常需 rollbackFor |
+| 多个同类型 Bean 如何注入 | 能说出 Qualifier、Primary、Resource、集合注入 |
+| 注入为 null 怎么排查 | 能按对象入容器、扫描、候选、条件装配、字段限制排查 |
+
+最后要形成一个稳定的面试心智模型：Spring 的所有能力都不是凭空发生的。对象要先被解析成 BeanDefinition，再被容器创建和装配；增强要通过 BeanPostProcessor 生成代理，再由外部调用进入代理链；事务要依赖代理拦截和异常规则；自动装配要依赖候选 Bean 的查找与消歧。只要能把每个现象放回这几条链路里解释，回答就不会停留在口号层面。

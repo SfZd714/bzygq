@@ -1,0 +1,187 @@
+# 03 Spring Boot集成Kafka与最小闭环
+
+Spring Boot 集成 Kafka 的最小闭环，指的是在一个可运行的后端服务中完成 Topic 准备、生产者发送、消费者接收、业务处理、Offset 提交和结果验证。它不是简单打印一行 hello world，而是用最少代码把 Kafka 的核心运行关系串起来：Producer 把消息写入某个 Topic-Partition，Broker 为消息分配 Offset，Consumer Group 中的消费者按分区拉取消息，业务处理完成后再推进消费位点。
+
+这个闭环的价值在于建立后续学习的实验底座。后面讨论 Producer 批量发送、分区策略、消费组 Rebalance、消息重复、死信队列和积压治理时，都可以回到同一个示例里观察：消息落到了哪个分区、Offset 是否推进、失败后是否会重复消费、并发线程数是否真的提高了消费能力。
+
+## 一、先把实验边界定清楚
+
+本地学习可以使用 Docker 启动单节点 Kafka，也可以使用已有测试集群。单节点环境足够验证 Spring Kafka API、Topic、分区、Offset 和手动确认流程；但它不能充分验证副本同步、ISR 缩小、Leader 切换、min.insync.replicas 等高可用机制。因此，本章只把目标限定为“应用侧最小闭环”，不把集群可靠性实验混在一起。
+
+版本上建议让 spring-kafka 跟随 Spring Boot 的依赖管理。Kafka Client 与 Broker 通常允许一定范围内的版本兼容，但实际项目仍然要统一管理 Spring Boot、Kafka Client、Broker、认证协议和序列化协议，避免出现开发环境能连、测试环境因为 SASL/SSL 或协议版本不同而失败的问题。
+
+Topic 也要提前规划。入门示例可以使用 iot\_device\_metric 这类具备业务含义的名称，而不是只写 test。如果本地 Topic 创建为 3 个分区，后面就能顺便观察 Key 分区、消费并发和 Offset 推进：
+
+kafka-topics.sh --bootstrap-server localhost:9092 \\ 
+\--create --topic iot\_device\_metric \\ 
+\--partitions 3 --replication-factor 1
+
+如果使用的是 KRaft 模式，命令层面仍然面向 bootstrap-server；如果使用老版本 ZooKeeper 模式，也不要把 ZooKeeper 当成应用代码必须感知的组件。Spring Boot 应用连接的是 Kafka Broker，不直接连接 ZooKeeper。
+
+## 二、依赖只引入 Spring Kafka，协议要提前想清楚
+
+Spring Boot 项目只需要引入 spring-kafka。如果项目已经使用 Spring Boot Starter Parent 或 BOM，通常不需要手工指定版本：
+
+ 
+org.springframework.kafka 
+spring-kafka 
+
+最小闭环可以先使用字符串 Key 和字符串 Value，因为它便于观察日志，也便于用命令行工具验证消息。但真实项目里消息协议不能长期停留在“随手拼 JSON 字符串”的阶段。跨系统事件通常要考虑 DTO 稳定性、字段兼容、版本演进、空值语义和错误数据隔离；团队协作复杂时，可以进一步使用 Avro、Protobuf 或带 Schema Registry 的协议治理。
+
+也就是说，入门阶段的 StringSerializer 是为了降低验证成本，不代表生产事件模型就应该保持松散。Kafka 的优势在于承载高吞吐事件流，但事件一旦进入 Topic，消费者可能来自多个系统，消息结构的随意变更会迅速放大为兼容性问题。
+
+## 三、application.yml 要表达清楚生产和消费意图
+
+下面是一份适合本地闭环的配置。它没有追求完整生产参数，而是刻意保留几组最重要的语义：生产端可靠写入、消费端手动提交、监听容器并发、单次拉取数量。
+
+spring: 
+kafka: 
+bootstrap-servers: localhost:9092 
+producer: 
+key-serializer: org.apache.kafka.common.serialization.StringSerializer 
+value-serializer: org.apache.kafka.common.serialization.StringSerializer 
+acks: all 
+properties: 
+enable.idempotence: true 
+retries: 3 
+linger.ms: 10 
+batch.size: 32768 
+consumer: 
+group-id: demo-kafka-group 
+key-deserializer: org.apache.kafka.common.serialization.StringDeserializer 
+value-deserializer: org.apache.kafka.common.serialization.StringDeserializer 
+auto-offset-reset: earliest 
+enable-auto-commit: false 
+properties: 
+max.poll.records: 100 
+listener: 
+ack-mode: manual 
+concurrency: 3
+
+bootstrap-servers 不是“所有 Kafka 节点必须完整写全”的意思，而是客户端用于发现集群元数据的入口。生产环境一般配置多个 Broker 地址，防止某个入口不可用导致客户端启动失败。客户端连上任意可用 Broker 后，会拉取 Topic、Partition、Leader 等元数据，再把消息发送到对应 Partition 的 Leader。
+
+生产者侧的 acks=all 表示 Leader 需要等待 ISR 中满足条件的副本确认后再向 Producer 返回成功，它比 acks=1 更重视可靠性。enable.idempotence=true 用于开启幂等生产能力，配合 Producer ID、序列号等机制减少重试造成的重复写入。retries 处理临时网络抖动或 Broker 短暂不可用，linger.ms 和 batch.size 则服务于批量发送，本章只先保留直观配置，具体取舍放到 Producer 链路章节展开。
+
+消费者侧要重点理解 enable-auto-commit=false。自动提交 Offset 的问题在于提交动作可能早于业务处理完成，一旦应用在处理过程中宕机，就可能出现“Kafka 认为这条消息已经消费，业务结果却没有落库”的风险。ack-mode=manual 让代码在业务成功后显式确认，能把 Offset 推进与业务结果绑定得更紧。它不能消除重复消费，但能显著降低业务未处理却提交位点的风险。
+
+concurrency=3 是 Spring Kafka 监听容器的并发线程数，不等于无条件提高三倍吞吐。消费组内同一 Topic 的一个分区同一时刻只能分配给一个消费者线程；如果 Topic 只有 1 个分区，配置 3 个并发线程也只有 1 个线程真正工作。因此，消费并发要和 Topic 分区数一起设计。
+
+## 四、生产端代码要封装发送结果，而不是散落调用
+
+最小生产者可以封装成一个领域服务。这里把 deviceId 作为 Key，把设备指标 JSON 作为 Value，原因是同一设备的指标通常要求按上报顺序处理，而相同 Key 会稳定落到同一分区。
+
+import lombok.RequiredArgsConstructor; 
+import lombok.extern.slf4j.Slf4j; 
+import org.springframework.kafka.core.KafkaTemplate; 
+import org.springframework.stereotype.Service; 
+ 
+@Slf4j 
+@Service 
+@RequiredArgsConstructor 
+public class DeviceMetricProducer { 
+ 
+private static final String TOPIC = "iot\_device\_metric"; 
+ 
+private final KafkaTemplate kafkaTemplate; 
+ 
+public void sendMetric(String deviceId, String jsonPayload) { 
+kafkaTemplate.send(TOPIC, deviceId, jsonPayload) 
+.whenComplete((result, ex) -> { 
+if (ex != null) { 
+log.error("send kafka metric failed, topic={}, deviceId={}", TOPIC, deviceId, ex); 
+return; 
+} 
+ 
+var metadata = result.getRecordMetadata(); 
+log.info("send kafka metric success, topic={}, partition={}, offset={}, deviceId={}", 
+metadata.topic(), metadata.partition(), metadata.offset(), deviceId); 
+}); 
+} 
+}
+
+这段代码里最重要的是回调，而不是 send 这一行。KafkaTemplate.send(...) 本质上是异步发送，成功后可以拿到 Topic、Partition、Offset 等元数据；失败时可能是序列化失败、元数据不可用、认证失败、超时、Broker 拒绝写入等。关键业务不能只调用 send 然后忽略结果，否则发送失败会变成静默丢失。
+
+实际项目里还应把 Topic 名称、异常日志、业务兜底、监控埋点统一封装。不要在多个 Controller 或 Service 中到处直接写 kafkaTemplate.send(...)，否则后续要添加 traceId、租户字段、失败补偿表、告警策略或统一回调时，会变成横向改造。
+
+Key 的选择要回到业务语义。设备上报用设备 ID，订单事件用订单 ID，合同审批用合同 ID，用户行为日志可能不用 Key 或使用用户 ID。Key 能换来局部有序性，但也可能造成热点分区；没有 Key 更容易均衡吞吐，但同一业务对象的事件可能分散到多个分区，消费时不能再假设严格顺序。
+
+## 五、消费端代码要把 Offset 推进放在业务之后
+
+消费者的入门代码可以使用 @KafkaListener 加 Acknowledgment。这里刻意接收 ConsumerRecord，因为它能暴露 Key、Value、Partition、Offset、Timestamp 和 Header，比只接收字符串更适合观察 Kafka 的运行状态。
+
+import lombok.extern.slf4j.Slf4j; 
+import org.apache.kafka.clients.consumer.ConsumerRecord; 
+import org.springframework.kafka.annotation.KafkaListener; 
+import org.springframework.kafka.support.Acknowledgment; 
+import org.springframework.stereotype.Service; 
+ 
+@Slf4j 
+@Service 
+public class DeviceMetricConsumer { 
+ 
+@KafkaListener(topics = "iot\_device\_metric", groupId = "demo-kafka-group") 
+public void consume(ConsumerRecord record, Acknowledgment ack) { 
+try { 
+log.info("receive kafka metric, key={}, partition={}, offset={}, timestamp={}", 
+record.key(), record.partition(), record.offset(), record.timestamp()); 
+ 
+handleMetric(record.key(), record.value()); 
+ 
+ack.acknowledge(); 
+} catch (Exception ex) { 
+log.error("consume kafka metric failed, key={}, partition={}, offset={}", 
+record.key(), record.partition(), record.offset(), ex); 
+throw ex; 
+} 
+} 
+ 
+private void handleMetric(String deviceId, String payload) { 
+if (deviceId == null || deviceId.isBlank()) { 
+throw new IllegalArgumentException("deviceId is blank"); 
+} 
+if (payload == null || payload.isBlank()) { 
+throw new IllegalArgumentException("payload is blank"); 
+} 
+ 
+// 真实项目可替换为：解析 JSON、校验字段、写入时序库、触发告警或更新设备状态。 
+} 
+}
+
+手动提交 Offset 的基本习惯是：先完成业务处理，再调用 ack.acknowledge()。如果业务处理失败，就不要提交 Offset，让错误处理器、重试机制或死信 Topic 接管后续流程。这个顺序解决的是“未处理却提交”的问题，但它不保证“永不重复”。如果业务处理成功后应用在提交 Offset 前宕机，重启后仍可能再次拉到同一条消息。
+
+因此，消费者侧必须把幂等当成默认要求。常见做法包括使用业务唯一键去重、数据库唯一索引、状态机版本校验、消费记录表、幂等 Token 或天然可覆盖的写入模型。面试或项目复盘时不要把“手动提交 Offset”等同于“Exactly Once”，它只是可靠消费链路中的一个基础动作。
+
+## 六、监听模式和批量消费要分清楚
+
+Spring Kafka 既支持单条监听，也支持批量监听。最小闭环建议先用单条监听，因为它能更清楚地观察每条消息的 Offset 和异常路径。批量监听适合吞吐优先的场景，例如日志入库、指标聚合、离线缓冲写入，但批量模式下要额外考虑部分失败如何处理：一批里有 100 条消息，如果第 37 条失败，前 36 条是否已经落库、后 63 条是否需要跳过、Offset 应提交到哪里，都需要明确策略。
+
+max.poll.records 控制一次 poll 最多拉取多少条记录，concurrency 控制监听容器创建多少个消费线程，二者不是同一个维度。前者影响单次拉取和单线程处理批量，后者影响同一消费者组内的并行消费者数量。吞吐不足时，不能只盲目调大这两个参数，还要看分区数、单条业务耗时、下游数据库承载、消费失败率和 Rebalance 频率。
+
+如果业务处理耗时较长，还要关注 max.poll.interval.ms。消费者长时间不继续 poll，可能被认为失联并触发 Rebalance，导致分区被转移给其他消费者。对于慢任务，通常要么拆短业务处理，要么用消息触发异步任务并快速确认，要么采用更明确的任务状态表来承接长事务。
+
+## 七、最小闭环要验证四类现象
+
+跑通代码后，不要只看控制台里有没有打印消息。更可靠的验证方式是围绕 Producer、Broker、Consumer、Offset 四个位置观察。
+| 验证位置 | 要看什么 | 说明 |
+| --- | --- | --- |
+| Producer 回调 | topic、partition、offset、异常 | 确认消息是否真正被 Kafka 接收，并知道它落到哪个分区 |
+| Consumer 日志 | key、partition、offset、timestamp | 确认消费端看到的是同一条消息流，而不是只打印 value |
+| 消费组位点 | committed offset 是否推进 | 验证 ack.acknowledge() 后消费组位点是否变化 |
+| 异常路径 | 抛异常时 Offset 是否暂停推进 | 验证业务失败不会提前提交 Offset |
+
+可以使用命令行工具辅助观察消费组位点：
+
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 \\ 
+\--describe --group demo-kafka-group
+
+如果本地 Topic 有 3 个分区，concurrency=3 通常能看到多个线程分别处理不同分区。把并发度调成 10 并不会让 3 个分区变成 10 份工作，这个现象能帮助理解 Kafka 消费并发的根本约束：同一个消费者组内，分区是并发分配的最小单位。
+
+还可以故意让 handleMetric 抛出异常。正常情况下，异常消息不应被立即确认；应用重启或重试后，仍可能再次消费到它。此时要继续观察错误处理器、重试间隔、日志告警和死信策略，而不是把异常吞掉后继续 ack。
+
+## 八、从入门配置过渡到项目配置
+
+真实项目中的 Kafka 配置通常按环境分层。本地环境重视启动简单和日志清晰；测试环境要模拟多分区、异常重试、消费者重启和下游失败；生产环境则要补齐认证、ACL、TLS、限流、压缩、监控、告警、死信 Topic、消息保留策略、磁盘容量和 Topic 变更流程。
+
+IoT、日志、埋点这类高吞吐场景尤其不能只按平均 QPS 规划。设备集中上线、批量补报、网络恢复后的瞬时回传，都可能让 Producer 和 Broker 在短时间内承受峰值压力。此时要结合 Topic 分区数、Key 分布、Producer 批量参数、Consumer 并发、下游写入能力一起评估，而不是只看单机应用日志是否正常。
+
+本章的掌握标准是：能够用 Spring Boot 跑通一条消息从发送到消费的闭环，能解释每个基础配置的意图，能说明为什么建议手动提交 Offset，也能承认手动提交并不等于不会重复消费。具备这个闭环之后，再看 Producer 发送链路时，拦截器、序列化器、分区器、RecordAccumulator 和 Sender 线程就不再是孤立名词，而是这条消息真正经过的路径。
