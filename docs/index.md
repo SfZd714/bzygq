@@ -5,13 +5,13 @@ hero:
   name: 央国企求职指南手册
   text: 指南本地归档
   tagline: 覆盖网申 / 简历 / 笔试 / 面试 / 体检入职全流程
-  actions:
-    - theme: brand
-      text: 从「前言」开始
-      link: /前言/1.我能帮到你什么——一个不光教你刷行测央国企知识库
-    - theme: alt
-      text: 查看完整目录
-      link: /00-目录
+actions:
+  - theme: brand
+    text: 从「前言」开始
+    link: /docs/前言/1.我能帮到你什么——一个不光教你刷行测央国企知识库.html
+  - theme: alt
+    text: 浏览全部板块
+    link: /
 
 features:
   - title: 📋 全流程覆盖
