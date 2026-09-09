@@ -12,9 +12,7 @@ build_final.log
 .workbuddy/
 刷题/
 题库/
-# 图片不进源码仓库：线上站由构建产物(dist)经 gh-pages 分支承载图片；
-# 如需把源图片一并入库做备份，请改用 Git LFS 并移除本行。
-_images/
+# 图片纳入源码仓库（GitHub 网页浏览 md 时可正常显示）；线上站由 gh-pages 的 assets/ 承载
 # 散落的爬虫脚本（正式版在 ~/.workbuddy/skills/hxsay-downloader/，无需入库）
 crawl_questions.py
 fetch.py
