@@ -1,6 +1,6 @@
 /* ============================================================
  * 央国企求职指南手册 · 阅读体验增强
- * 通过 .vitepress/theme/index.ts 注册
+ * 通过 .vitepress/theme/index.js 注册
  * ============================================================ */
 
 /* 1. 字体与排版 ------------------------------------------------- */
@@ -128,7 +128,7 @@
   font-weight: 600;
 }
 
-/* 9. 移动端适配 ---------------------------------------------- */
+/* 9. 移动端基础适配 ------------------------------------------ */
 @media (max-width: 768px) {
   .vp-doc h1 {
     font-size: 1.6rem;
@@ -152,4 +152,271 @@
 }
 .dark .vp-doc blockquote {
   background: rgba(14, 165, 233, 0.08);
+}
+
+/* ============================================================
+ * 11. 板块索引页 · 迷你导航卡片
+ *     由 gen_index_pages.py 注入到每个板块的 index.md
+ *     视觉：左侧色条 + 标题 + 数量 + 编号徽标 + 圆形箭头
+ * ============================================================ */
+
+/* —— 主题色：低饱和度强调色，每个板块一套 —— */
+:root {
+  --mini-nav-default: #0ea5e9;
+  --mini-nav-docs: #6366f1;
+  --mini-nav-xingce: #f59e0b;
+  --mini-nav-ai: #8b5cf6;
+  --mini-nav-algo: #10b981;
+  --mini-nav-java: #ef4444;
+  --mini-nav-struct: #ec4899;
+  --mini-nav-semi: #f97316;
+  --mini-nav-group: #14b8a6;
+  --mini-nav-tech: #3b82f6;
+}
+
+/* —— 卡片外层：左侧色条 + 圆角底 —— */
+.mini-nav-section {
+  position: relative;
+  margin: 2em 0;
+  padding: 1.5em 1.5em 1.2em;
+  background: var(--vp-c-bg-soft);
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
+}
+.mini-nav-section::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--mini-nav-default);
+}
+.mini-nav-section.theme-docs::before     { background: var(--mini-nav-docs); }
+.mini-nav-section.theme-xingce::before   { background: var(--mini-nav-xingce); }
+.mini-nav-section.theme-ai::before       { background: var(--mini-nav-ai); }
+.mini-nav-section.theme-algo::before     { background: var(--mini-nav-algo); }
+.mini-nav-section.theme-java::before     { background: var(--mini-nav-java); }
+.mini-nav-section.theme-struct::before    { background: var(--mini-nav-struct); }
+.mini-nav-section.theme-semi::before     { background: var(--mini-nav-semi); }
+.mini-nav-section.theme-group::before    { background: var(--mini-nav-group); }
+.mini-nav-section.theme-tech::before     { background: var(--mini-nav-tech); }
+
+/* —— 卡片头部：图标 + 标题 + 数量标签 —— */
+.mini-nav-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-bottom: 1em;
+  padding-bottom: 0.6em;
+  border-bottom: 1px dashed var(--vp-c-divider);
+}
+.mini-nav-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  background: var(--mini-nav-default);
+  color: white;
+}
+.mini-nav-section.theme-docs     .mini-nav-icon { background: var(--mini-nav-docs); }
+.mini-nav-section.theme-xingce   .mini-nav-icon { background: var(--mini-nav-xingce); }
+.mini-nav-section.theme-ai       .mini-nav-icon { background: var(--mini-nav-ai); }
+.mini-nav-section.theme-algo     .mini-nav-icon { background: var(--mini-nav-algo); }
+.mini-nav-section.theme-java     .mini-nav-icon { background: var(--mini-nav-java); }
+.mini-nav-section.theme-struct  .mini-nav-icon { background: var(--mini-nav-struct); }
+.mini-nav-section.theme-semi     .mini-nav-icon { background: var(--mini-nav-semi); }
+.mini-nav-section.theme-group    .mini-nav-icon { background: var(--mini-nav-group); }
+.mini-nav-section.theme-tech     .mini-nav-icon { background: var(--mini-nav-tech); }
+
+.mini-nav-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+.mini-nav-count {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: white;
+  background: var(--mini-nav-default);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.mini-nav-section.theme-docs     .mini-nav-count { background: var(--mini-nav-docs); }
+.mini-nav-section.theme-xingce   .mini-nav-count { background: var(--mini-nav-xingce); }
+.mini-nav-section.theme-ai       .mini-nav-count { background: var(--mini-nav-ai); }
+.mini-nav-section.theme-algo     .mini-nav-count { background: var(--mini-nav-algo); }
+.mini-nav-section.theme-java     .mini-nav-count { background: var(--mini-nav-java); }
+.mini-nav-section.theme-struct  .mini-nav-count { background: var(--mini-nav-struct); }
+.mini-nav-section.theme-semi     .mini-nav-count { background: var(--mini-nav-semi); }
+.mini-nav-section.theme-group    .mini-nav-count { background: var(--mini-nav-group); }
+.mini-nav-section.theme-tech     .mini-nav-count { background: var(--mini-nav-tech); }
+
+/* —— 列表容器 —— */
+.mini-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* —— 迷你导航行：编号徽标 + 标题 + 箭头 —— */
+.mini-nav-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 36px;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.55em 0.8em;
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  text-decoration: none;
+}
+.mini-nav-row:hover {
+  background: var(--mini-nav-default);
+  background: color-mix(in srgb, var(--mini-nav-default) 8%, var(--vp-c-bg));
+  border-color: var(--mini-nav-default);
+  transform: translateX(4px);
+}
+
+/* 编号徽标 */
+.mini-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mini-nav-default);
+  background: color-mix(in srgb, var(--mini-nav-default) 12%, transparent);
+  border-radius: 6px;
+  padding: 4px 0;
+  letter-spacing: 0.04em;
+}
+.mini-nav-row:hover .mini-nav-badge {
+  color: white;
+  background: var(--mini-nav-default);
+}
+
+.theme-docs    .mini-nav-badge { color: var(--mini-nav-docs);    background: color-mix(in srgb, var(--mini-nav-docs) 12%, transparent); }
+.theme-xingce  .mini-nav-badge { color: var(--mini-nav-xingce);  background: color-mix(in srgb, var(--mini-nav-xingce) 12%, transparent); }
+.theme-ai      .mini-nav-badge { color: var(--mini-nav-ai);      background: color-mix(in srgb, var(--mini-nav-ai) 12%, transparent); }
+.theme-algo    .mini-nav-badge { color: var(--mini-nav-algo);    background: color-mix(in srgb, var(--mini-nav-algo) 12%, transparent); }
+.theme-java    .mini-nav-badge { color: var(--mini-nav-java);    background: color-mix(in srgb, var(--mini-nav-java) 12%, transparent); }
+.theme-struct  .mini-nav-badge { color: var(--mini-nav-struct);  background: color-mix(in srgb, var(--mini-nav-struct) 12%, transparent); }
+.theme-semi    .mini-nav-badge { color: var(--mini-nav-semi);    background: color-mix(in srgb, var(--mini-nav-semi) 12%, transparent); }
+.theme-group   .mini-nav-badge { color: var(--mini-nav-group);   background: color-mix(in srgb, var(--mini-nav-group) 12%, transparent); }
+.theme-tech    .mini-nav-badge { color: var(--mini-nav-tech);    background: color-mix(in srgb, var(--mini-nav-tech) 12%, transparent); }
+
+.theme-docs    .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-docs); }
+.theme-xingce  .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-xingce); }
+.theme-ai      .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-ai); }
+.theme-algo    .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-algo); }
+.theme-java    .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-java); }
+.theme-struct  .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-struct); }
+.theme-semi    .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-semi); }
+.theme-group   .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-group); }
+.theme-tech    .mini-nav-row:hover .mini-nav-badge { background: var(--mini-nav-tech); }
+
+/* 标题链接：覆盖默认虚线边，去下划线 */
+.mini-nav-row .mini-nav-link {
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+  border-bottom: none;
+  background: transparent;
+  padding: 0;
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.mini-nav-row:hover .mini-nav-link {
+  color: var(--mini-nav-default);
+  background: transparent;
+}
+.theme-docs    .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-docs); }
+.theme-xingce  .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-xingce); }
+.theme-ai      .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-ai); }
+.theme-algo    .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-algo); }
+.theme-java    .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-java); }
+.theme-struct  .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-struct); }
+.theme-semi    .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-semi); }
+.theme-group   .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-group); }
+.theme-tech    .mini-nav-row:hover .mini-nav-link { color: var(--mini-nav-tech); }
+
+/* 圆形箭头按钮 */
+.mini-nav-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mini-nav-default) 10%, transparent);
+  color: var(--mini-nav-default);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.mini-nav-row:hover .mini-nav-arrow {
+  background: var(--mini-nav-default);
+  color: white;
+  transform: translateX(3px);
+}
+.theme-docs    .mini-nav-arrow { color: var(--mini-nav-docs);    background: color-mix(in srgb, var(--mini-nav-docs) 10%, transparent); }
+.theme-xingce  .mini-nav-arrow { color: var(--mini-nav-xingce);  background: color-mix(in srgb, var(--mini-nav-xingce) 10%, transparent); }
+.theme-ai      .mini-nav-arrow { color: var(--mini-nav-ai);      background: color-mix(in srgb, var(--mini-nav-ai) 10%, transparent); }
+.theme-algo    .mini-nav-arrow { color: var(--mini-nav-algo);    background: color-mix(in srgb, var(--mini-nav-algo) 10%, transparent); }
+.theme-java    .mini-nav-arrow { color: var(--mini-nav-java);    background: color-mix(in srgb, var(--mini-nav-java) 10%, transparent); }
+.theme-struct  .mini-nav-arrow { color: var(--mini-nav-struct);  background: color-mix(in srgb, var(--mini-nav-struct) 10%, transparent); }
+.theme-semi    .mini-nav-arrow { color: var(--mini-nav-semi);    background: color-mix(in srgb, var(--mini-nav-semi) 10%, transparent); }
+.theme-group   .mini-nav-arrow { color: var(--mini-nav-group);   background: color-mix(in srgb, var(--mini-nav-group) 10%, transparent); }
+.theme-tech    .mini-nav-arrow { color: var(--mini-nav-tech);    background: color-mix(in srgb, var(--mini-nav-tech) 10%, transparent); }
+
+.theme-docs    .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-docs); }
+.theme-xingce  .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-xingce); }
+.theme-ai      .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-ai); }
+.theme-algo    .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-algo); }
+.theme-java    .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-java); }
+.theme-struct  .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-struct); }
+.theme-semi    .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-semi); }
+.theme-group   .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-group); }
+.theme-tech    .mini-nav-row:hover .mini-nav-arrow { background: var(--mini-nav-tech); }
+
+/* —— 移动端保持三段式 —— */
+@media (max-width: 640px) {
+  .mini-nav-section {
+    padding: 1em 0.9em;
+  }
+  .mini-nav-row {
+    grid-template-columns: 36px 1fr 28px;
+    gap: 0.45em;
+    padding: 0.5em 0.6em;
+  }
+  .mini-nav-badge {
+    font-size: 0.7rem;
+  }
+  .mini-nav-link {
+    font-size: 0.88rem;
+  }
+  .mini-nav-arrow {
+    width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
+  }
+}
+
+/* —— 暗色模式：低饱和度颜色自动变深一些 —— */
+.dark .mini-nav-section {
+  background: var(--vp-c-bg-soft);
+}
+.dark .mini-nav-row {
+  background: var(--vp-c-bg);
+}
+.dark .mini-nav-section.theme-xingce .mini-nav-icon,
+.dark .mini-nav-section.theme-semi .mini-nav-icon,
+.dark .mini-nav-section.theme-java .mini-nav-icon {
+  color: #1f2937;
 }
