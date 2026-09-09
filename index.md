@@ -14,14 +14,14 @@ hero:
       link: /结构化面试/
 
 features:
-  - title: 🚀 求职主线
-    details: docs —— 网申、简历优化、笔试指南、面试指南、体检入职全流程
-  - title: 📊 行测笔试
-    details: 行测、算法笔试（LeetCode）、Java 面试问题汇总
-  - title: 🎤 面试专项
-    details: 结构化 / 半结构化 / 无领导小组 三类面试逐题讲解
-  - title: 🤖 技术扩展
-    details: 科技岗专业课、AI 应用开发
+  - title: 🔍 全文搜索
+    details: 内置本地搜索（Ctrl/Cmd + K），输入关键词即可秒定位任意一篇文章。
+  - title: 📱 移动端适配
+    details: 响应式布局，手机浏览器打开自动折叠侧栏，导航卡三段式压缩显示。
+  - title: 💾 本地归档优先
+    details: 静态站点，数据全在你自己的硬盘上，离线可读，隐私可控。
+  - title: 🚀 持续更新
+    details: 每页底部「在 GitHub 上编辑此页」，点点就能提议修改或纠错。
 ---
 
 ## 📚 板块导航

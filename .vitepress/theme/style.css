@@ -155,6 +155,23 @@
 }
 
 /* ============================================================
+ * 11. 阅读进度条（顶部细条，随滚动填充）
+ *     DOM 由 .vitepress/theme/index.js 注入
+ * ============================================================ */
+#reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, #0ea5e9, #6366f1);
+  z-index: 9999;
+  pointer-events: none;
+  transition: width 0.05s linear;
+  box-shadow: 0 0 6px rgba(14, 165, 233, 0.5);
+}
+
+/* ============================================================
  * 11. 板块索引页 · 迷你导航卡片
  *     由 gen_index_pages.py 注入到每个板块的 index.md
  *     视觉：左侧色条 + 标题 + 数量 + 编号徽标 + 圆形箭头
