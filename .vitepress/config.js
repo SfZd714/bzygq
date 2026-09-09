@@ -116,8 +116,10 @@ export default defineConfig({
   description: '央国企求职全流程教程归档：网申 / 简历 / 笔试 / 面试 / 体检入职，含行测、AI应用、算法、Java 等',
   lang: 'zh-CN',
   lastUpdated: true,
-  // 原始文章间互链在子集归档里部分目标页不存在，忽略死链以免阻断构建
-  ignoreDeadLinks: true,
+  // 死链检查保持开启（曾因原文互链失效而设为 true 掩盖问题，属掩耳盗铃）。
+  // 现在失效互链已由 fix_missing_links.py 降级为纯文本，构建期检查成为真防线：
+  // markdown 链接由 VitePress 此处把关，raw HTML 的 <a href> 由 check_dead_links.py 把关。
+  ignoreDeadLinks: false,
   // 刷题 App / 题库 JSON / 索引页 不进入文档构建
   srcExclude: ['刷题/**', '题库/**', '**/00-目录.md', '部署说明.md', 'node_modules/**', '.workbuddy/**'],
   // 品牌色与移动端适配
