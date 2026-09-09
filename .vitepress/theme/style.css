@@ -331,7 +331,38 @@
   line-height: 1.5;
   word-break: break-word;
   overflow-wrap: anywhere;
+  display: block;
 }
+/* 首页用：标题 + 描述双行布局 */
+.mini-nav-row .mini-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0;
+}
+.mini-nav-row .mini-nav-name {
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+  font-size: 0.95rem;
+}
+.mini-nav-row .mini-nav-desc {
+  font-size: 0.78rem;
+  color: var(--vp-c-text-2);
+  font-weight: 400;
+  line-height: 1.45;
+}
+.mini-nav-row:hover .mini-nav-name {
+  color: var(--mini-nav-default);
+}
+.theme-docs    .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-docs); }
+.theme-xingce  .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-xingce); }
+.theme-ai      .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-ai); }
+.theme-algo    .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-algo); }
+.theme-java    .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-java); }
+.theme-struct  .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-struct); }
+.theme-semi    .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-semi); }
+.theme-group   .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-group); }
+.theme-tech    .mini-nav-row:hover .mini-nav-name { color: var(--mini-nav-tech); }
 .mini-nav-row:hover .mini-nav-link {
   color: var(--mini-nav-default);
   background: transparent;
