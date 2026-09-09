@@ -26,7 +26,7 @@ RAG 的作用，就是把“事实依据”从模型参数里拿出来，放到�
 
 RAG 的执行过程可以理解成一条问答链路：用户提出问题，系统把问题转换成检索请求，到知识库中找到相关片段，再把“用户问题 + 检索材料 + 回答约束”组织成 Prompt，最后调用大模型生成答案。这个过程中，模型仍然负责语言理解和表达，但事实依据来自外部知识库。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/b45f3c75fb6742788bec2dc17063e9a9.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113056Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=a3e395d55bbf9b04a30c4b3c7bf2c8cf1d015a9900263e8241d977d889d1bbc0)
+![](../_images/b45f3c75fb6742788bec2dc17063e9a9.png)
 
 这条链路里，检索不是简单查关键词。真实系统通常会同时使用向量检索、关键词检索、Metadata 过滤和 Rerank。向量检索适合处理语义相似问题，比如用户问“出差能报哪些费用”，系统可以找到“差旅报销范围”相关片段；关键词检索适合匹配制度编号、岗位名称、产品型号等精确词；Metadata 过滤用于限制部门、权限、版本和文档类型；Rerank 则把初步召回的候选材料重新排序，让最能回答问题的依据排在前面。
 
@@ -38,7 +38,7 @@ RAG 的执行过程可以理解成一条问答链路：用户提出问题，系�
 
 普通大模型问答、RAG 和微调经常被放在一起比较。它们都能改善模型使用效果，但解决的问题不同。普通问答主要依赖模型参数和当前上下文，适合开放聊天、通用解释和不依赖企业私有资料的任务；RAG 把知识放在外部，适合制度问答、文档问答、合同分析和知识库助手；微调则是用训练数据调整模型行为，适合稳定任务、固定格式或特定领域表达风格。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/7bfb35f2db7344a1bb4bcde48eee993a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113057Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=11cb9f7a47033460d3a78cda718aedb0b5fa233666599312a42b3b55c0b963ca)
+![](../_images/7bfb35f2db7344a1bb4bcde48eee993a.png)
 
 RAG 和微调最容易混淆。可以这样区分：RAG 解决的是“知识从哪里来”，微调更偏向解决“模型怎么表现”。如果企业文档频繁更新、资料量很大、需要返回引用来源，优先考虑 RAG；如果任务长期稳定、样本充足、希望模型更稳定地按某种格式或风格输出，可以考虑微调。
 
@@ -48,7 +48,7 @@ RAG 和微调最容易混淆。可以这样区分：RAG 解决的是“知识从
 
 RAG 能降低幻觉，但不能保证模型永远正确。原因很简单：RAG 是一条长链路，最终答案的质量取决于每个环节。只要文档解析、Chunk 切分、Embedding、召回、Rerank、Prompt 构建或答案生成中的某个环节出问题，最终答案都可能偏离事实。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/99c7ed5ea9794bb68bbec70c83ca080e.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113057Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=ddd7960a0bf3218897416ad5153a29875e4b85ef2670898c9a08d3a3b05a8644)
+![](../_images/99c7ed5ea9794bb68bbec70c83ca080e.png)
 
 例如，文档解析阶段如果把 PDF 表格列顺序识别错了，后续检索到的材料本身就是错的；Chunk 切分如果把一个条款的条件和结论切开，模型可能只看到半段依据；Embedding 模型如果不适合行业术语，语义检索可能召回“看起来相似但实际无关”的片段；Rerank 如果没有把关键证据排到前面，Prompt 里就可能塞入大量噪声材料。
 

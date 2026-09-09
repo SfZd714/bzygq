@@ -22,7 +22,7 @@
 
 也就是说，模型生成的工具名、参数和下一步计划都只能算“执行建议”。在真正调用业务接口之前，后端还要做工具白名单、参数 Schema 校验、RBAC 鉴权、数据范围过滤、风险等级判断、幂等控制和审计记录。安全不能依赖模型自觉，必须依赖系统约束。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/1f32af82b9984110adf6d1357cc1de40.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121213Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=f5cbab3bdd288caf451aad3f44351079bde9adeebadb6791b75126f5b7115990)
+![](../_images/1f32af82b9984110adf6d1357cc1de40.png)
 
 ## 
 
@@ -70,7 +70,7 @@ Prompt Injection 在 Agent 场景里比普通问答更危险。普通问答被�
 
 如果系统只靠模型拒绝，这个边界很脆。更稳的防护链路应该是：指令分层、工具可见性过滤、参数和权限校验、输出脱敏或拒答、审计告警。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/5ab3403d2ef14fd9b48c90e0aeb3e6d1.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121214Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=1f7c50d44031da7d59e31fb5ec353b92b16fbea3a54ce5e2ac7153a1f4cd6e52)
+![](../_images/5ab3403d2ef14fd9b48c90e0aeb3e6d1.png)
 
 第一，系统指令、工具描述、检索材料和用户输入要分层。用户输入不能覆盖系统规则，也不能修改工具权限。第二，用户没有权限的工具，不要出现在模型可见工具列表里。第三，即使模型生成了工具调用，后端也要重新校验用户身份、数据范围和参数。第四，工具返回和最终输出都要做脱敏和拒答。第五，命中攻击模式或越权尝试时，要写入审计日志和风控告警。
 
@@ -84,7 +84,7 @@ Prompt Injection 在 Agent 场景里比普通问答更危险。普通问答被�
 
 可以按动作风险把工具分成四层。L0 是只读公开或低敏查询，比如查询制度、FAQ、公开产品说明，这类工具可以自动调用。L1 是内部只读查询，比如客户脱敏画像、账务摘要、工单状态，通常可以自动执行，但必须经过用户身份和数据范围校验。L2 是内部写操作，比如创建工单、更新备注、生成待办，这类动作应该先生成草稿或待确认请求。L3 是高风险动作，比如年费真实减免、额度调整、账务冲正、客户资料变更、权限修改和对外正式通知，这类动作不应该让 Agent 直接提交。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/0fd083f4f432493faa7858c0af1d3820.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121214Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=26de43986a4672617d08801170854ff270cdadb73af183063fc2943503816ae4)
+![](../_images/0fd083f4f432493faa7858c0af1d3820.png)
 
 更推荐的工程做法是：Agent 负责查询、归纳、生成草稿和给出处理建议；用户或审批人负责确认；后端在确认后执行真实写操作；执行结果写入审计日志和任务状态。这样既能让 Agent 提升效率，又不会把责任主体交给模型。面试时千万不要把项目讲成“所有流程都能自动化”，企业系统里这反而是不成熟的表达。
 
@@ -96,7 +96,7 @@ Agent 评估不能只看最终回答是否自然。因为最终回答看起来�
 
 所以 Agent 评估至少要覆盖三层：任务结果、执行过程和安全边界。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/36a7b3a532ed40939f0e23be2c528cff.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121214Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=6f5a58b73f6e41e53da3ae9f9c006ac77ee41ad06a0526a282142c1ec924fd8d)
+![](../_images/36a7b3a532ed40939f0e23be2c528cff.png)
 
 任务结果层看用户目标有没有完成，输出是否准确、完整、可理解。执行过程层看工具选得对不对，参数填得对不对，Observation 有没有被正确理解，失败后有没有重试、降级或追问。安全边界层看有没有越权、泄密、危险动作、Prompt Injection 失守、无依据输出和未审计执行。
 
@@ -110,7 +110,7 @@ Agent 评估不能只看最终回答是否自然。因为最终回答看起来�
 
 面试项目里，可以设计一个小型评测集。比如银行信用卡客服 Agent，准备 50 条任务，不需要很大，但要覆盖正常任务和异常边界。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/e6d30c2a2cd54e3380cb7d597f736043.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121214Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=8af7c7ccf0c820aff7838c812f75cf1f73c924abf6ae9462eb76bcae1e54fb3a)
+![](../_images/e6d30c2a2cd54e3380cb7d597f736043.png)
 
 这 50 条任务可以分成七类。正常查询大约 15 条，用来测试年费规则、卡片状态、客服记录摘要这类基本能力。多步骤任务大约 10 条，用来测试查账务、检索规则、生成客服回复这一整条链路。信息不足任务大约 5 条，用来测试系统会不会追问客户身份、卡片标识或账单月份。权限不足任务大约 5 条，用来测试无权客户和超出坐席数据范围时是否阻断。工具失败任务大约 5 条，用来模拟 API 超时、返回为空、字段缺失。Prompt Injection 大约 5 条，用来测试忽略规则、泄露提示词、越权调用和跳过日志。高风险动作大约 5 条，用来测试自动减免年费、调整额度、修改资料这类请求是否进入人工确认。
 
@@ -126,7 +126,7 @@ Agent 评估不能只看最终回答是否自然。因为最终回答看起来�
 
 离线评测只能说明系统在评测集上表现如何，上线后还要看真实运行指标。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/35827ddefba24cafb2711c3583b0822b.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121215Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=d3cd8e758a7e0bdb36e0493fc4e6eca8709de96308269696a36a3da271b82f57)
+![](../_images/35827ddefba24cafb2711c3583b0822b.png)
 
 上线观测可以分成四组。任务质量看任务完成率、用户采纳率、用户负反馈率和低置信度拒答率。执行稳定性看平均工具调用次数、平均任务耗时、工具失败率、重复调用率和任务恢复成功率。安全治理看权限拦截次数、Prompt Injection 命中次数、敏感字段脱敏次数、人工确认率和人工接管率。成本效率看 Token 消耗、模型调用次数、工具调用次数和平均单任务成本。
 

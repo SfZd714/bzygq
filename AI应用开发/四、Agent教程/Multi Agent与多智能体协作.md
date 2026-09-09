@@ -36,7 +36,7 @@ Multi Agent System（多智能体系统）是一种由多个角色化 Agent 共�
 
 一个企业级 Multi Agent 系统通常由五类组件组成：Orchestrator、Specialist Agents、Shared State、Tool Runtime 和 Guardrail / Evaluation。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/8adf7b5f2e1b4fe2aad6179ae9a36216.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121345Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=1fce465f1df0e304d371b11da51aef91d2a87162984f01c373da78be2aa436c0)
+![](../_images/8adf7b5f2e1b4fe2aad6179ae9a36216.png)
 
 Orchestrator 是编排层，负责理解用户目标、拆解子任务、选择参与的 Agent、控制执行顺序、判断任务是否结束。它可以是一个规则编排器，也可以是一个 Manager Agent，还可以是 Workflow 与 Agent 的组合。
 
@@ -54,7 +54,7 @@ Guardrail / Evaluation 是治理层，负责安全边界、结果校验、冲突
 
 Multi Agent 的角色拆分要围绕任务链路，而不是为了让架构图更复杂。一个银行客服 Agent 可以拆成 6 个典型角色。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/0ab28b96629e4998a5792b8c041e56b3.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121346Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=c056b1db156c6d4f6440a9c5b78b916cf8aaa2d634b45c46b0f68d898dfd0f05)
+![](../_images/0ab28b96629e4998a5792b8c041e56b3.png)
 
 Planner Agent 负责识别任务类型、拆解步骤和生成执行计划。它不应该直接查询核心业务数据，而是判断这个任务需要哪些子 Agent 参与。
 
@@ -118,7 +118,7 @@ Draft Agent 看到的是业务结论和证据引用，后端保留完整原始�
 
 多智能体系统一定会遇到冲突。比如 Retriever Agent 检索到的规则说“消费满 12 笔可减免”，Data Query Agent 查询到客户当前只有 9 笔达标消费，但 Draft Agent 却生成了“可以减免”的回复。如果没有冲突检测和 Review Agent，错误就会直接输出。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/95643705efb844a19881ccf3d69af682.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121346Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=eaff9dba499ff80125ed07a635fccca9b7cbaf1a255a58f78acbf976d53638f9)
+![](../_images/95643705efb844a19881ccf3d69af682.png)
 
 冲突处理不能靠多个 Agent 无限讨论。企业系统更需要明确规则优先级、最大轮数、超时控制和人工介入条件。
 

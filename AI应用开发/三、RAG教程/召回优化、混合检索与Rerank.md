@@ -12,7 +12,7 @@ RAG 系统回答得准不准，第一道关不是模型生成，而是检索召�
 
 召回优化要解决的是“正确依据能不能被找到、能不能排在前面、能不能进入上下文”。比如用户问“试用期员工请假会不会影响转正”，系统需要从员工手册、考勤制度、转正规则中找到相关条款。如果只召回了普通请假流程，没有召回转正评估规则，模型就可能答得很顺，但依据是不完整的。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/6dabeec08d5b4228879da911263aca2a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113311Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=54afc148f6e79f2bd89b1a92490c0cf545a3d445f8c998aff80ccc08c753d773)
+![](../_images/6dabeec08d5b4228879da911263aca2a.png)
 
 真实项目里的召回问题通常有几类。用户问题太短，系统不知道具体场景；问题表达太口语，字面词和制度原文对不上；专有名词、编号、接口名不能只靠语义相似猜；多跳问题需要同时召回多个材料；Chunk 切分和 Metadata 过滤也可能让正确依据被切断或被过滤掉。召回优化就是围绕这些问题逐层补强。
 
@@ -22,7 +22,7 @@ RAG 系统回答得准不准，第一道关不是模型生成，而是检索召�
 
 用户输入通常不是为检索系统准备的。真实问法可能是“退款怎么弄”“票没了还能报吗”“转正会卡请假吗”。这些问题对人来说能理解，但对检索系统来说信息太少。Query Rewrite 的作用，是在不改变用户意图的前提下，把口语化、简略化、指代不清的问题改写成更完整的检索表达。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/bae2bea7c04c4a77b7608d66af063186.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113311Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=c4f9c733f0052eb94c4f220a19e1939cb51e2279051777cb39a97728672480f2)
+![](../_images/bae2bea7c04c4a77b7608d66af063186.png)
 
 查询重写可以由规则、同义词词典、业务词库或大模型完成。简单场景下，规则和词典就能解决常见简称、同义词和术语映射；复杂场景下，可以让大模型结合会话上下文补全实体、业务场景和约束条件。关键点是：重写不是为了让问题变漂亮，而是让检索系统更容易命中正确材料。
 
@@ -32,7 +32,7 @@ Multi Query 则是在重写基础上进一步扩展。系统为同一个用户�
 
 向量检索擅长处理语义相似，关键词检索擅长处理精确匹配。企业知识库里两类问题都会出现，所以混合检索通常比单一路径更稳。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/20f3b8a05a80492b8640c2f305926a89.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113312Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=baa005702dc3ac2721d1d8f9845c7ce69fced20b9776eef256eb29bbafd232e0)
+![](../_images/20f3b8a05a80492b8640c2f305926a89.png)
 
 向量检索适合用户口语化提问、同义表达和语义相关内容。例如“票据丢了还能报销吗”可以召回“发票遗失处理流程”。关键词检索适合制度编号、接口名、产品型号、错误码和原文术语。例如“BGP-2025-07 接口超时”这类问题，如果只靠向量相似，可能找不到精确接口文档；加入 BM25 或关键词检索后，命中关键编号的概率会更高。
 
@@ -42,7 +42,7 @@ Multi Query 则是在重写基础上进一步扩展。系统为同一个用户�
 
 初步召回通常追求覆盖，所以会返回较多候选片段，例如 Top-20 或 Top-50。但“被召回”不等于“最适合放进 Prompt”。向量检索和关键词检索更像粗筛，它们能快速找出可能相关的材料，却不一定能精确判断哪个片段最能回答问题。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/ccf50547c6f54b41a4a16ad4b54d3eb7.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113312Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=fed03cc3cd32daa9c8afba0311226333fedc2da4a4999f1e0947b58adc835ca0)
+![](../_images/ccf50547c6f54b41a4a16ad4b54d3eb7.png)
 
 Rerank 的作用，是用更精细的模型重新判断用户问题和候选片段的相关性。常见方式包括 Cross Encoder、LLM Rerank 和规则加权。Cross Encoder 会把问题和文档片段一起输入模型，直接计算相关性得分，准确性通常比单纯向量相似更好，但计算成本更高。LLM Rerank 更灵活，可以结合复杂语义判断，但成本、延迟和稳定性要评估。规则加权适合补充工程信号，例如标题命中、文档来源、更新时间、权限范围和业务优先级。
 

@@ -12,7 +12,7 @@ RAG 系统的问答质量，表面上看是模型回答得准不准，往前追�
 
 RAG 的核心链路是“检索到依据，再让模型基于依据回答”。这意味着模型最终能看到什么，首先取决于知识库里存了什么。文档处理如果出了问题，后面检索、Rerank 和 Prompt 都是在错误底座上补救。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/59192271f7ed422f95241db31f72a2ba.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113213Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=22130c00b20f21dd79d96622a65255f398416c8dabc51bf03af105f6cc2288b2)
+![](../_images/59192271f7ed422f95241db31f72a2ba.png)
 
 这张图要表达的是：不同文档格式带来的问题并不一样。PDF 常见问题是多栏排版、表格错乱和扫描件 OCR 错误；Word 常见问题是标题层级、批注、页眉页脚混入正文；Excel 的难点是合并表头、跨 Sheet 关系和字段含义；HTML 容易混入导航、脚注和重复内容；系统导出数据通常字段很多，但缺少自然语言解释。它们如果被直接切分和向量化，就会把噪声一起写进知识库。
 
@@ -22,7 +22,7 @@ RAG 的核心链路是“检索到依据，再让模型基于依据回答”。�
 
 一个比较稳的文档处理流程，通常会经历文档接入、解析抽取、结构清洗、Chunk 切分、Metadata 标注、Embedding 入库和入库验收几个阶段。它的目标不是把文件变成一长段纯文本，而是把资料加工成可检索、可过滤、可追溯的知识单元。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/ddd29aecfec14708a80cd89742cc8566.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113214Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=a90ec7b294e260b0ad4faceb59d18917fa338cb62829b43e6a61fa92b6fd5806)
+![](../_images/ddd29aecfec14708a80cd89742cc8566.png)
 
 文档接入阶段要记录原始文件、版本、分类和权限范围。解析抽取阶段要尽量保留标题、段落、列表、表格、图片说明和页码位置。结构清洗阶段要去掉页眉页脚、目录噪声、重复水印、空行和无意义符号，同时避免把有业务含义的字段误删。Chunk 切分阶段要把长文档拆成语义相对完整的片段。Metadata 标注阶段要为每个片段补上来源、章节、页码、版本、权限等结构化信息。最后才是生成向量、写入索引，并做抽样验收。
 
@@ -40,7 +40,7 @@ RAG 的核心链路是“检索到依据，再让模型基于依据回答”。�
 
 Chunk 是文档被切分后的文本块。Embedding 模型通常不会对整本文档生成一个向量，而是对每个 Chunk 生成向量。这样做有三个原因：第一，长文本会让一个向量混入多个主题，语义表达变得模糊；第二，在线问答不能每次把整本文档都塞进上下文；第三，检索结果需要定位到具体依据，而不是把整份制度丢给模型。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/6f2ded93f0bd4560a8ac361a45aa4702.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113214Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=977152ef05a1bdcf81ca10355dff944e193ae8d1d2f09c653ed9436932b0ced8)
+![](../_images/6f2ded93f0bd4560a8ac361a45aa4702.png)
 
 常见切分方式可以按“规则简单程度”和“语义保留能力”来理解。固定长度切分实现最简单，但容易把一句话、一个条款或一个表格切断；递归切分会优先按标题、段落、句子逐级拆分，是很多项目的基础方案；结构切分更适合制度、手册和报告，因为它能利用标题、条款、列表和表格边界；语义切分会根据句段相似度判断边界，完整性更好但成本更高；LLM 辅助切分更灵活，但成本、稳定性和可复现性都需要评估。
 

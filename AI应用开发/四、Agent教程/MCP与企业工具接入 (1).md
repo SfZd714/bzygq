@@ -32,7 +32,7 @@ MCP 解决的正是这个接入层问题：让外部系统通过 MCP Server 暴�
 
 可以把 MCP 理解成 Agent 使用外部能力的一层标准连接协议。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/b3af39c07258414db455db653eb2c391.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121134Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=7913f0a4a35885d85bd2edde86b6a84ff09809ce3dce524bce1ba91afe7c124e)
+![](../_images/b3af39c07258414db455db653eb2c391.png)
 
 MCP Host 是用户正在使用的 AI 应用，比如聊天助手、IDE、内部办公助手或企业智能客服工作台。Host 负责承载用户交互、模型推理、任务状态和执行循环。
 
@@ -54,7 +54,7 @@ MCP Server 是外部能力的标准化适配层。它不等于大模型，也不
 
 很多人只记得 MCP 可以接工具，但 MCP 更重要的是把不同类型的上下文分开。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/5e20b88032d34cf9a7b94316b3dc79a3.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121135Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=ce52fe77309fc5de4f14cceba101ec4a7b5c1d188c65b9820a4ccffde6edb713)
+![](../_images/5e20b88032d34cf9a7b94316b3dc79a3.png)
 
 Tools 是可执行动作，比如查询年费交易、检索业务规则、生成客服工单草稿、读取日志摘要。Tool 往往需要参数，部分 Tool 可能有副作用，因此必须考虑权限、风险等级和审计。
 
@@ -93,7 +93,7 @@ API 网关主要服务“程序调用程序”，它关注路由、鉴权、限�
 
 企业 MCP Server 不建议做成一个“大而全”的万能 Server。更好的方式是按业务领域拆分，让权限、工具描述和责任边界更清楚。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/59892e14dab84e7f95a52b7866251d71.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121135Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=d46a3320d71e63b09e5f13e30c82044649d2c583725db58f40894fcb1f79df08)
+![](../_images/59892e14dab84e7f95a52b7866251d71.png)
 
 在银行客服 Agent 场景里，可以这样拆：
 | MCP Server | 暴露能力 |
@@ -120,7 +120,7 @@ API 网关主要服务“程序调用程序”，它关注路由、鉴权、限�
 
 MCP 不能变成“模型访问内网的万能钥匙”。企业接入时至少要传递用户身份、角色、部门、数据范围和任务上下文，一个稳妥链路是：
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/40c4d6d4ddf140aebfeec2ae760226c0.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T121135Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=e3ec75c774ff6f61228282fd50ff8dc346981f041545063c8dde97ff02b993e2)
+![](../_images/40c4d6d4ddf140aebfeec2ae760226c0.png)
 
 权限不能只在 Host 判断一次。MCP Server 侧也要校验，因为它是真正靠近数据和工具的地方。外部系统最好也继续按自己的 RBAC 和数据范围做兜底。
 

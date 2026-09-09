@@ -18,7 +18,7 @@ RAG 的目标不是让大模型“看起来答得像”，而是让它在给定�
 
 第三层是工程可控性。企业 RAG 不是一次性问答，而是持续运行的系统，所以要看引用是否可追溯、无依据时能否拒答、权限过滤是否生效、日志能否支持问题复盘。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/73d7a54ecf2d43caa1024ecdef590f6a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113333Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=9c8f349b2d3b16255935b0b649a6ffc8cb28dd919895ef36de4de87988252172)
+![](../_images/73d7a54ecf2d43caa1024ecdef590f6a.png)
 
 考试或面试里问“怎么评估 RAG 效果”，不要只背 Recall@K、MRR 这些指标。更好的回答是：先拆链路，再选指标。检索阶段看命中和排序，生成阶段看正确性和依据一致性，上线阶段看引用、拒答、反馈和日志。
 
@@ -30,7 +30,7 @@ RAG 的难点在于：最终答案错了，不代表模型本身错了。一个�
 
 因此，评估 RAG 要先建立错误归因视角：不要看到答案错就只改 Prompt，也不要看到召回差就马上换模型。正确做法是沿着链路查证据。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/d11a032ec55f4f99ad2c6b33642dd2bc.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113333Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=5dad1a98abfa87ea56c30e16aeda4082fa0c45c38eca56d912d968708d3ea9f1)
+![](../_images/d11a032ec55f4f99ad2c6b33642dd2bc.png)
 
 这张图的意思很简单：RAG 评估要能定位“错在哪里”。如果正确材料没有进入候选集，优先改文档处理、Chunk、Embedding 或召回策略；如果正确材料进来了但排序靠后，优先改混合检索和 Rerank；如果材料正确但答案乱编，优先改 Prompt 约束、引用格式和答案校验；如果答案正确但用户不可接受，就要看表达、来源展示和业务流程衔接。
 
@@ -44,7 +44,7 @@ RAG 的难点在于：最终答案错了，不代表模型本身错了。一个�
 
 但是也不能只追求多召回。Top-K 太大时，虽然正确材料更容易进来，但无关材料也会变多，后续上下文会变脏，模型更容易被噪声带偏。所以检索评估要同时看“命中”和“噪声”：既要把正确依据找回来，也要控制无关片段不要挤占上下文。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/2cf10c236c8f4c759fcd8f254501e4cc.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113333Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=d92d831011f98b4e6f6c4d6091dd4c9d89232afa847e99c7d1f70f45b174eab2)
+![](../_images/2cf10c236c8f4c759fcd8f254501e4cc.png)
 
 实际项目里可以先做一个小而稳定的评估集：覆盖高频问题、边界问题、无答案问题、权限问题和多文档综合问题。评估集不一定一开始很大，但必须有标准依据，否则所有优化都只能靠感觉。
 
@@ -64,7 +64,7 @@ RAG 能降低幻觉，但不能自动消灭幻觉。原因很直接：RAG 只是
 
 幻觉控制要分层做。第一层是知识库侧，保证文档解析、Chunk、Metadata 和权限过滤可靠；第二层是检索侧，提高相关材料命中率，减少无关片段噪声；第三层是生成侧，用 Prompt 明确“只能基于材料回答”“无依据要拒答”“关键结论要带来源”；第四层是校验侧，对答案和引用做一致性检查；第五层是审计侧，记录问题、召回片段、最终 Prompt、模型回答和用户反馈。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/c9e37b848042488da1b54c17c09f650c.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113334Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=b8d11f6feb54ad500ea66b6714c851068bf635ee9a6e09df61a77bba97f79ff9)
+![](../_images/c9e37b848042488da1b54c17c09f650c.png)
 
 一个常用的 Prompt 约束可以写成这样：
 | Plain Text请只基于参考资料回答问题。如果参考资料中没有足够依据，请回答“当前资料不足，无法确认”。不要使用参考资料之外的常识进行补充。回答中的关键结论需要标注对应来源。如果不同资料之间存在冲突，请说明冲突点，不要强行给出唯一结论。 |
@@ -78,7 +78,7 @@ RAG 项目上线后，评估不应该停止。真实用户的问题会不断暴�
 
 一个可落地的评估闭环通常包括五步：先维护标准问题集和标准依据；再定期跑离线评测，看检索和答案指标；上线后记录真实问题、召回结果、Prompt 和回答；对差评、投诉和人工纠错样本做归因；最后把问题反向用于文档补充、切分调整、检索策略优化、Rerank 调整和 Prompt 改写。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/f7d139e261bb4bbd908044b0f923aeb6.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113334Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=94b11651acefcc7cece5ee0fb38312b34984d03e42bef257bd1616937ca3deb6)
+![](../_images/f7d139e261bb4bbd908044b0f923aeb6.png)
 
 日志字段也要围绕排查问题设计。只记录最终答案是不够的，至少要能看到原始问题、改写后的查询、召回片段、Rerank 分数、最终 Prompt、模型输出、引用来源、用户身份和反馈结果。这样当用户说“答案不对”时，团队才能知道是资料没有、召回不到、排序不准，还是模型没有按材料回答。
 

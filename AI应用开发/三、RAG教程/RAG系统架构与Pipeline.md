@@ -12,7 +12,7 @@
 
 离线链路负责把原始资料加工成可检索的知识库。它更像数据工程，重点是解析质量、切分粒度、元数据、权限和索引更新。在线链路负责在用户提问时快速找到相关材料，并把材料组织成模型能使用的上下文。它更像服务编排，重点是检索准确率、响应延迟、Prompt 约束、引用来源和兜底策略。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/8fb8b24477484c48b2b635efea610cb1.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113148Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=291960799d7d16dc9e87be3c2b2887a8de3fd7065df44a9676796d49e169cba9)
+![](../_images/8fb8b24477484c48b2b635efea610cb1.png)
 
 这张图要看懂的是职责边界：离线链路决定“知识库里有什么、质量怎么样、能不能被正确检索”；在线链路决定“用户问题来了以后，能不能找准、排好、拼好并回答好”。很多 RAG 项目效果不好，并不是模型能力突然失效，而是这两条链路中某个环节把噪声、缺失或错误传递到了最后。
 
@@ -20,7 +20,7 @@
 
 离线建库的目标不是简单地把文档存进数据库，而是把原始资料加工成适合检索、适合追溯、适合权限控制的知识单元。这个过程通常从文档接入开始，经过解析、清洗、切分、元数据补全、Embedding 和索引写入，最后形成可以被在线问答调用的检索底座。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/afb123656e9c42c1b1ae857d56f42d47.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113149Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=2baf2d2324dcdce1f0a7dda1b213d46877c9f13e8c4af37a5cc0c45a15f6639e)
+![](../_images/afb123656e9c42c1b1ae857d56f42d47.png)
 
 文档解析是第一道质量关。PDF、Word、网页、Markdown、Excel 等资料表面上都是“文档”，但结构差异很大。PDF 可能有页眉页脚、分栏、扫描图片和复杂表格；Word 可能有标题层级、批注和嵌套表格；网页可能混入导航栏、广告和脚本残留。如果解析阶段把章节顺序打乱、表格关系拆散、页眉页脚当成正文，后面的向量检索会把这些噪声一起召回。
 
@@ -34,7 +34,7 @@ Embedding 和向量入库解决的是“如何让语义相近的内容可以被�
 
 在线链路从用户问题开始，但用户输入通常并不适合直接检索。用户可能会说“报销怎么弄”“这个能走特批吗”“上次那个接口超时怎么处理”，这些问题短、口语化、上下文依赖强。RAG 系统需要先理解问题，再决定如何检索。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/097964f142ce4c439b40b73009c4cbb1.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113149Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=a91889bc26e8398020953b7be8d14e3edafc0c911321c53116a47600165850b4)
+![](../_images/097964f142ce4c439b40b73009c4cbb1.png)
 
 问题预处理常见包括意图识别、查询改写、关键词补全和多轮上下文合并。例如用户问“这个能不能特批”，系统需要结合当前会话或业务入口判断“这个”指的是什么，再把问题改写成更适合检索的表达。这个环节做得不好，后面向量检索就会从一开始偏离方向。
 
@@ -58,7 +58,7 @@ RAG Prompt 的核心任务，是把检索结果变成模型可以稳定使用的
 
 从后端开发角度看，RAG 项目不是一个孤立算法，而是一套业务系统。文档管理要处理上传、版本、分类、删除和权限；解析服务要处理文件抽取、OCR、表格和清洗；向量化服务要处理批量任务、失败重试和模型调用成本；检索服务要处理索引、过滤、召回和重排；问答服务要处理会话、Prompt、模型调用和答案流式返回；日志审计要记录问题、召回片段、模型输出、用户反馈和人工复核结果。
 
-![](https://hxsay.com:19000/hxsay-image/quesion/imgs/08f4daeaf4e443319c9c5c8e4f994ce3.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin_20260624_us-east-1_s3_aws4_request&X-Amz-Date=20260624T113149Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=cb43c818420eb4943cf93b2f3178a65d6614c506cefc1917778f8a536d36e688)
+![](../_images/08f4daeaf4e443319c9c5c8e4f994ce3.png)
 
 这也是为什么后端同学转 AI 应用开发时，不应该把能力边界理解成“只会调模型接口”。企业 RAG 的难点往往不在于把 API 调通，而在于把文档、权限、检索、模型、日志和评测接成一条可维护的工程链路。一个系统能不能长期使用，取决于它能否持续更新知识、控制权限、定位问题、评估效果，并在错误发生时留下足够证据。
 
