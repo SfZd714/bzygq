@@ -5,8 +5,7 @@ dist/
 .vitepress/.temp/
 .vitepress/config.js.timestamp-*.mjs
 .workspace/
-build.log
-build_final.log
+build*.log
 .deploy_tmp/
 .DS_Store
 .workbuddy/
