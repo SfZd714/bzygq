@@ -98,6 +98,9 @@ for (const g of sidebar) {
   if (g && typeof g.text === 'string') g.text = iconOf(g.text) + ' ' + g.text
 }
 
+// 顶部 github 链接（用于 editLink / socialLinks）
+const GITHUB_REPO = process.env.GITHUB_REPO || 'SfZd714/bzygq'
+
 export default defineConfig({
   // 静态托管 base（由部署脚本注入）：
   //   用户页仓库（wzx825 / SfZd714.github.io）-> '/'
@@ -117,6 +120,11 @@ export default defineConfig({
   ignoreDeadLinks: true,
   // 刷题 App / 题库 JSON / 索引页 不进入文档构建
   srcExclude: ['刷题/**', '题库/**', '**/00-目录.md', '部署说明.md', 'node_modules/**', '.workbuddy/**'],
+  // 品牌色与移动端适配
+  head: [
+    ['meta', { name: 'theme-color', content: '#0ea5e9' }],
+    ['meta', { name: 'viewport', content: 'width=device-width,initial-scale=1.0' }],
+  ],
   themeConfig: {
     nav,
     sidebar,
@@ -126,5 +134,17 @@ export default defineConfig({
     docFooter: { prev: '上一篇', next: '下一篇' },
     outline: { label: '本页大纲', level: [2, 3] },
     search: { provider: 'local' },
+    // 每页底部「在 GitHub 上编辑此页」按钮
+    editLink: {
+      pattern: 'https://github.com/' + GITHUB_REPO + '/edit/main/:path',
+      text: '在 GitHub 上编辑此页',
+    },
+    // 顶部右上角 GitHub 图标
+    socialLinks: [{ icon: 'github', link: 'https://github.com/' + GITHUB_REPO }],
+    // 页脚
+    footer: {
+      message: '求职指南 · 资料归档 · 仅供学习参考',
+      copyright: `Copyright © ${new Date().getFullYear()} SfZd714 · CC BY-NC-SA 4.0`,
+    },
   },
 })
